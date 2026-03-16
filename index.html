@@ -595,7 +595,7 @@ async function loadCycle(client){
  try{
   resetCycleUI();setCredentialState(false);
   const c=client||currentClient;if(!c)return;
-  const{data:payment}=await sb.from('payment_history').select('payment_date,due_date,product').eq('client_id',c.id).in('status',['approved','paid','pago']).order('payment_date',{ascending:false}).limit(1).maybeSingle();
+  const{data:payment}=await sbPublic.from('payment_history').select('payment_date,due_date,product').eq('client_id',c.id).in('status',['approved','paid','pago']).order('payment_date',{ascending:false}).limit(1).maybeSingle();
   if(!payment?.payment_date)return;
   const inicio=new Date(payment.payment_date);if(isNaN(inicio.getTime()))return;
   const fim=new Date(inicio);fim.setMonth(fim.getMonth()+1);
@@ -627,7 +627,7 @@ async function loadPayments(client){
  try{
   const c=client||currentClient;
   if(!c||!c.id){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Faca login para ver.</td></tr>';return;}
-  const{data:pays,error}=await sb.from('payment_history').select('payment_date,amount,status,month_ref,due_date,product').eq('client_id',c.id).order('payment_date',{ascending:false}).limit(24);
+  const{data:pays,error}=await sbPublic.from('payment_history').select('payment_date,amount,status,month_ref,due_date,product').eq('client_id',c.id).order('payment_date',{ascending:false}).limit(24);
   if(error||!pays||!pays.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px;">Nenhum pagamento encontrado.</td></tr>';return;}
   const stMap={approved:'paid',paid:'paid',pago:'paid',pending:'pending',pendente:'pending',late:'late',atrasado:'late'};
   const bMap={paid:'badge-paid',pending:'badge-pending',late:'badge-late'};
@@ -653,7 +653,7 @@ async function loadPayments(client){
 let msgs=[],msgIdx=0,msgTimer=null;
 async function loadMessages(){
  try{
-  const{data}=await sb.from('admin_messages').select('emoji,message').eq('active',true).order('order');
+  const{data}=await sbPublic.from('admin_messages').select('emoji,message').eq('active',true).order('order');
   msgs=(data&&data.length)?data.map(r=>({emoji:r.emoji||'📌',html:r.message})):[{emoji:'📌',html:'<strong>Bem-vindo.</strong> Portal BoxPower ativo.'},{emoji:'💡',html:'<strong>Dica.</strong> Copie a senha com um clique.'},{emoji:'🛡️',html:'<strong>Segurança.</strong> Senha expira em 15s.'}];
  }catch(_){msgs=[{emoji:'📌',html:'<strong>Portal BoxPower.</strong> Bem-vindo.'}];}
  const b=document.getElementById('msgBadge');if(b&&msgs.length>0){b.textContent=msgs.length;b.style.display='inline';}
@@ -756,7 +756,7 @@ async function refreshPortal(){
 let currentPopup=null;
 function openPopup(data){currentPopup=data||null;setEl('popupEmoji',data?.emoji||'📌');setEl('popupTitle',data?.title||'Aviso');const m=document.getElementById('popupMessage');if(m)m.innerHTML=data?.message||'—';document.getElementById('adminPopupOverlay').classList.add('show');}
 function closePopup(){document.getElementById('adminPopupOverlay').classList.remove('show');if(currentPopup?.show_once&&currentPopup?.id)try{localStorage.setItem('bp_popup_seen_'+currentPopup.id,'1');}catch(_){}}
-async function loadPopup(){try{const{data}=await sb.from('admin_popup').select('id,title,message,emoji,button_text,active,show_once,priority,created_at').eq('active',true).order('priority',{ascending:false}).limit(1).maybeSingle();if(!data)return;if(data.show_once)try{if(localStorage.getItem('bp_popup_seen_'+data.id)==='1')return;}catch(_){}openPopup(data);}catch(e){}}
+async function loadPopup(){try{const{data}=await sbPublic.from('admin_popup').select('id,title,message,emoji,button_text,active,show_once,priority,created_at').eq('active',true).order('priority',{ascending:false}).limit(1).maybeSingle();if(!data)return;if(data.show_once)try{if(localStorage.getItem('bp_popup_seen_'+data.id)==='1')return;}catch(_){}openPopup(data);}catch(e){}}
 
 /* ── UTILS ── */
 function copyText(id,msg){const el=document.getElementById(id);if(!el)return;const t=el.textContent.trim();navigator.clipboard.writeText(t).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);});showToast(msg);}

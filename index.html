@@ -230,6 +230,17 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 .mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(4,7,15,0.85);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);margin:-16px -16px 16px;}
 .hamburger{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--glass2);color:var(--muted2);display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .hamburger svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* SIDEBAR MESSAGES */
+.sidebar-msgs{padding:14px 14px 10px;border-top:1px solid var(--border);flex-shrink:0;}
+.sidebar-msgs-header{display:flex;align-items:center;gap:6px;font-size:0.62rem;color:var(--muted2);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;}
+.sidebar-banner{display:flex;gap:10px;align-items:flex-start;padding:12px 12px;border-radius:12px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.12);position:relative;overflow:hidden;}
+.sidebar-banner::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--green),var(--violet));border-radius:2px 0 0 2px;}
+.sidebar-banner.out{animation:bOut .3s ease forwards;}
+.sidebar-banner.in{animation:bIn .35s ease forwards;}
+.sidebar-banner-dots{display:flex;gap:4px;margin-top:8px;justify-content:center;}
+.sidebar-banner-dots span{height:2px;border-radius:2px;background:rgba(255,255,255,0.15);transition:all 0.35s;width:12px;}
+.sidebar-banner-dots span.on{background:var(--green);width:20px;}
 </style>
 </head>
 <body>
@@ -304,6 +315,19 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
    </a>
   </nav>
   <!-- FOOTER -->
+  <!-- MESSAGES IN SIDEBAR -->
+  <div class="sidebar-msgs" id="sidebarMsgs">
+   <div class="sidebar-msgs-header">
+    <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--green);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>Avisos</span>
+    <span id="sideMsgCount" style="margin-left:auto;background:var(--green);color:#000;font-size:0.55rem;font-weight:800;padding:1px 5px;border-radius:10px;"></span>
+   </div>
+   <div class="sidebar-banner" id="sideAdminBanner">
+    <div id="sideBannerEmoji" style="font-size:1rem;flex-shrink:0;">⏳</div>
+    <div id="sideBannerText" style="font-size:0.75rem;line-height:1.5;color:var(--muted2);">Carregando...</div>
+   </div>
+   <div class="sidebar-banner-dots" id="sideBannerDots"></div>
+  </div>
   <div class="sidebar-footer">
    <button class="btn-logout" onclick="doLogout()">
     <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -638,7 +662,7 @@ async function loadMessages(){
   msgs=(data&&data.length)?data.map(r=>({emoji:r.emoji||'📌',html:r.message})):[{emoji:'📌',html:'<strong>Bem-vindo.</strong> Portal BoxPower ativo.'},{emoji:'💡',html:'<strong>Dica.</strong> Copie a senha com um clique.'},{emoji:'🛡️',html:'<strong>Segurança.</strong> Senha expira em 15s.'}];
  }catch(_){msgs=[{emoji:'📌',html:'<strong>Portal BoxPower.</strong> Bem-vindo.'}];}
  const b=document.getElementById('msgBadge');if(b&&msgs.length>0){b.textContent=msgs.length;b.style.display='inline';}
- initBanner();buildMsgList();
+ initBanner();buildMsgList();initSidebarBanner();
 }
 
 function initBanner(){
@@ -659,6 +683,29 @@ function initBanner(){
 function buildMsgList(){
  const list=document.getElementById('msgList');if(!list)return;
  list.innerHTML=msgs.map((m,i)=>`<div class="msg-list-item${i===0?' active-msg':''}" onclick="jumpMsg(${i})"><div class="msg-item-header"><span class="msg-emoji">${m.emoji}</span></div><div class="msg-item-text">${m.html.replace(/<[^>]*>/g,'')}</div></div>`).join('');
+}
+
+function initSidebarBanner(){
+ const banner=document.getElementById('sideAdminBanner');
+ const eEl=document.getElementById('sideBannerEmoji');
+ const tEl=document.getElementById('sideBannerText');
+ const dEl=document.getElementById('sideBannerDots');
+ const cEl=document.getElementById('sideMsgCount');
+ if(!banner||!msgs.length)return;
+ if(cEl)cEl.textContent=msgs.length;
+ dEl.innerHTML=msgs.map((_,i)=>`<span class="${i===0?'on':''}"></span>`).join('');
+ const dots=[...dEl.querySelectorAll('span')];
+ let sIdx=0;
+ function renderSide(i){
+  eEl.textContent=msgs[i].emoji;
+  tEl.innerHTML=msgs[i].html.replace(/<[^>]*>/g,'');
+  dots.forEach((d,k)=>d.classList.toggle('on',k===i));
+ }
+ renderSide(0);banner.classList.add('in');
+ if(msgs.length>1)setInterval(()=>{
+  banner.classList.remove('in');banner.classList.add('out');
+  setTimeout(()=>{sIdx=(sIdx+1)%msgs.length;renderSide(sIdx);banner.classList.remove('out');banner.classList.add('in');},320);
+ },5000);
 }
 
 function jumpMsg(idx){

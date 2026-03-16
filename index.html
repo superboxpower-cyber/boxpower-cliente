@@ -595,7 +595,7 @@ async function loadCycle(client){
  try{
   resetCycleUI();setCredentialState(false);
   const c=client||currentClient;if(!c)return;
-  const{data:payment}=await sbPublic.from('payment_history').select('payment_date,due_date,product').eq('client_id',c.id).in('status',['approved','paid','pago']).order('payment_date',{ascending:false}).limit(1).maybeSingle();
+  const{data:payment}=await sbPublic.from('payment_history').select('payment_date,product_id,reference_month').eq('client_id',c.id).in('status',['approved','paid','pago']).order('payment_date',{ascending:false}).limit(1).maybeSingle();
   if(!payment?.payment_date)return;
   const inicio=new Date(payment.payment_date);if(isNaN(inicio.getTime()))return;
   const fim=new Date(inicio);fim.setMonth(fim.getMonth()+1);
@@ -608,7 +608,7 @@ async function loadCycle(client){
   const fmtMes=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).toUpperCase().replace('.','');
   setEl('cycleStart',fmt(inicio));setEl('cycleEnd',fmt(fim));setEl('gaugeDays',diasRest);
   setEl('progressStart',fmtMes(inicio));setEl('progressEnd',fmtMes(fim));
-  setEl('statPlan',payment.product||'BoxPower');
+  setEl('statPlan','BoxPower');
   setEl('statStatus',ativo?'Ativo':'Vencido');
   setEl('statDue','Dia '+fim.getDate());
   const bar=document.getElementById('progressFill');if(bar)bar.style.width=pct+'%';
@@ -627,7 +627,7 @@ async function loadPayments(client){
  try{
   const c=client||currentClient;
   if(!c||!c.id){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Faca login para ver.</td></tr>';return;}
-  const{data:pays,error}=await sbPublic.from('payment_history').select('payment_date,amount,status,month_ref,due_date,product').eq('client_id',c.id).order('payment_date',{ascending:false}).limit(24);
+  const{data:pays,error}=await sbPublic.from('payment_history').select('payment_date,amount,status,reference_month,product_id').eq('client_id',c.id).order('payment_date',{ascending:false}).limit(24);
   if(error||!pays||!pays.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px;">Nenhum pagamento encontrado.</td></tr>';return;}
   const stMap={approved:'paid',paid:'paid',pago:'paid',pending:'pending',pendente:'pending',late:'late',atrasado:'late'};
   const bMap={paid:'badge-paid',pending:'badge-pending',late:'badge-late'};

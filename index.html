@@ -481,6 +481,8 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 const SUPABASE_URL="https://epwmoicgvuprzkcpxjoy.supabase.co";
 const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwd21vaWNndnVwcnprY3B4am95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NDAxMjgsImV4cCI6MjA4NTMxNjEyOH0.pXcCWqGQSS6YMIZeIyfAaGlNaW6Mx2hfDQtVrX4zues";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+// Public client - always anon, used for reading clients table (avoids RLS session issue)
+const sbPublic=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 let currentClient=null;
 
 /* ── 4-DIGIT ID from UUID ── */
@@ -607,7 +609,7 @@ async function loadCycle(client){
   setEl('cycleStart',fmt(inicio));setEl('cycleEnd',fmt(fim));setEl('gaugeDays',diasRest);
   setEl('progressStart',fmtMes(inicio));setEl('progressEnd',fmtMes(fim));
   setEl('statPlan',payment.product||'BoxPower');
-  setEl('statStatus',ativo?'✅ Ativo':'❌ Vencido');
+  setEl('statStatus',ativo?'Ativo':'Vencido');
   setEl('statDue','Dia '+fim.getDate());
   const bar=document.getElementById('progressFill');if(bar)bar.style.width=pct+'%';
   const offset=235-(pct/100)*235;
@@ -623,7 +625,8 @@ async function loadCycle(client){
 async function loadPayments(client){
  const tbody=document.getElementById('payBody');
  try{
-  const c=client||currentClient;if(!c){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Faça login para ver.</td></tr>';return;}
+  const c=client||currentClient;
+  if(!c||!c.id){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Faca login para ver.</td></tr>';return;}
   const{data:pays,error}=await sb.from('payment_history').select('payment_date,amount,status,month_ref,due_date,product').eq('client_id',c.id).order('payment_date',{ascending:false}).limit(24);
   if(error||!pays||!pays.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px;">Nenhum pagamento encontrado.</td></tr>';return;}
   const stMap={approved:'paid',paid:'paid',pago:'paid',pending:'pending',pendente:'pending',late:'late',atrasado:'late'};
@@ -767,7 +770,7 @@ function setEl(id,val){const el=document.getElementById(id);if(el)el.textContent
   const{data:{session}}=await sb.auth.getSession();
   if(session&&session.user){
    const email=(session.user.email||'').trim().toLowerCase();
-   const{data:client}=await sb.from('clients').select('id,name,email,active,product_id,due_day,agreed_price').ilike('email',email).maybeSingle();
+   const{data:client}=await sbPublic.from('clients').select('id,name,email,active,product_id,due_day,agreed_price').ilike('email',email).maybeSingle();
    if(client&&client.active){
 
     const veoIds2=['783f332d-1213-4c14-b1ca-26f06577c898','01ccb898-f88f-4bd3-8bd9-33650abf961c'];

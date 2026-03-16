@@ -523,29 +523,21 @@ async function login(){
  if(!email||!pass){msgEl.textContent='Preencha e-mail e senha.';msgEl.className='err';return;}
  msgEl.textContent='Verificando acesso...';
 
- const{error}=await sb.auth.signInWithPassword({email,password:pass});
- if(error){msgEl.textContent='Login inválido. Verifique seus dados.';msgEl.className='err';return;}
-
- // VERIFICAR SE É CLIENTE BOXPOWER (não VEO3)
+ // 1. Buscar cliente ANTES do signIn (anon key funciona sem RLS de autenticado)
  const{data:client,error:cErr}=await sb.from('clients')
   .select('id,name,email,active,product_id,due_day,agreed_price')
   .ilike('email',email)
   .maybeSingle();
 
- if(cErr||!client){
-  msgEl.textContent='Acesso não encontrado. Contate o suporte.';msgEl.className='err';
-  await sb.auth.signOut();return;
- }
- if(!client.active){
-  msgEl.textContent='Conta inativa. Contate o suporte.';msgEl.className='err';
-  await sb.auth.signOut();return;
- }
- // Bloquear clientes VEO3
+ if(cErr){msgEl.textContent='Erro ao verificar cadastro: '+cErr.message;msgEl.className='err';return;}
+ if(!client){msgEl.textContent='Email nao cadastrado no BoxPower.';msgEl.className='err';return;}
+ if(!client.active){msgEl.textContent='Conta inativa. Contate o suporte.';msgEl.className='err';return;}
  const veoIds=['783f332d-1213-4c14-b1ca-26f06577c898','01ccb898-f88f-4bd3-8bd9-33650abf961c'];
- if(veoIds.includes(client.product_id)){
-  msgEl.textContent='Este portal é exclusivo para clientes BoxPower AdsPower.';msgEl.className='err';
-  await sb.auth.signOut();return;
- }
+ if(veoIds.includes(client.product_id)){msgEl.textContent='Portal exclusivo BoxPower/AdsPower.';msgEl.className='err';return;}
+
+ // 2. Agora autentica no Supabase
+ const{error}=await sb.auth.signInWithPassword({email,password:pass});
+ if(error){msgEl.textContent='Senha incorreta. Verifique seus dados.';msgEl.className='err';return;}
 
  if(document.getElementById('rememberMe').checked){
   localStorage.setItem('bp_creds',JSON.stringify({e:email,p:pass}));

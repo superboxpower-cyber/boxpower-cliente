@@ -1,0 +1,652 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>BoxPower Hub · Portal do Cliente</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+ --bg:#04070F; --bg2:#070D1A;
+ --glass:rgba(255,255,255,0.035); --glass2:rgba(255,255,255,0.06);
+ --border:rgba(255,255,255,0.08); --border2:rgba(16,185,129,0.18);
+ --text:#F0F4FF; --muted:#5A6B8A; --muted2:#8899BB;
+ --blue:#4F8EF7; --blue2:#63B3ED; --violet:#8B5CF6;
+ --cyan:#06B6D4; --green:#10B981; --amber:#F59E0B; --red:#EF4444;
+ --glow-green:rgba(16,185,129,0.25); --glow-vio:rgba(139,92,246,0.2);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden;position:relative;}
+.ambient{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.ambient-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.35;}
+.orb1{width:320px;height:320px;background:radial-gradient(circle,#10B981,transparent);top:-80px;left:-60px;animation:drift1 12s ease-in-out infinite;}
+.orb2{width:260px;height:260px;background:radial-gradient(circle,#8B5CF6,transparent);top:200px;right:-80px;animation:drift2 15s ease-in-out infinite;}
+.orb3{width:200px;height:200px;background:radial-gradient(circle,#06B6D4,transparent);bottom:100px;left:20px;animation:drift3 10s ease-in-out infinite;opacity:0.2;}
+@keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,20px)}}
+@keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,30px)}}
+@keyframes drift3{0%,100%{transform:translate(0,0)}50%{transform:translate(15px,-20px)}}
+.ambient::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(16,185,129,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,0.03) 1px,transparent 1px);background-size:40px 40px;}
+header{position:relative;z-index:10;padding:20px 18px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);backdrop-filter:blur(20px);background:rgba(4,7,15,0.6);}
+.header-left{display:flex;align-items:center;gap:12px;}
+.logo-mark{width:46px;height:46px;border-radius:14px;overflow:hidden;position:relative;border:1px solid rgba(16,185,129,0.3);box-shadow:0 0 20px rgba(16,185,129,0.2),inset 0 1px 0 rgba(255,255,255,0.1);}
+.logo-mark img{width:100%;height:100%;object-fit:cover;display:block;}
+.header-info{display:flex;flex-direction:column;}
+.header-hello{font-size:0.72rem;color:var(--muted2);letter-spacing:0.06em;font-weight:400;}
+.header-brand{font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:-0.01em;}
+.header-sub{display:inline-flex;align-items:center;gap:4px;font-size:0.65rem;color:var(--green);font-weight:500;letter-spacing:0.08em;text-transform:uppercase;margin-top:1px;}
+.header-sub::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.header-actions{display:flex;gap:8px;}
+.hbtn{width:38px;height:38px;border-radius:11px;border:1px solid var(--border);background:var(--glass2);color:var(--muted2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;backdrop-filter:blur(10px);font-size:0;}
+.hbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hbtn:hover{border-color:var(--green);color:var(--green);background:rgba(16,185,129,0.1);box-shadow:0 0 12px rgba(16,185,129,0.15);}
+.hbtn:active{transform:scale(0.9);}
+.hbtn.spin svg{animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+main{position:relative;z-index:10;padding:16px 16px 32px;display:flex;flex-direction:column;gap:14px;}
+.card{background:var(--glass);border:1px solid var(--border);border-radius:22px;backdrop-filter:blur(24px);position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);}
+.cycle-card{padding:20px;}
+.cycle-card::after{content:'';position:absolute;bottom:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(16,185,129,0.15),transparent);pointer-events:none;}
+.cycle-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
+.cycle-dates{font-family:'DM Mono',monospace;font-size:1rem;font-weight:500;color:var(--text);}
+.cycle-arrow{color:var(--muted);margin:0 6px;}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;}
+.gauge{position:relative;width:72px;height:72px;display:flex;align-items:center;justify-content:center;}
+.gauge svg{position:absolute;inset:0;transform:rotate(-90deg);}
+.gauge-track{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:4;}
+.gauge-fill{fill:none;stroke-width:4;stroke-linecap:round;stroke:url(#gaugeGrad);stroke-dasharray:188;stroke-dashoffset:50;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);}
+.gauge-num{font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;color:var(--amber);line-height:1;}
+.gauge-lbl{font-size:0.6rem;color:var(--muted2);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px;font-weight:500;}
+.progress-labels{display:flex;justify-content:space-between;font-size:0.68rem;color:var(--muted);margin-bottom:8px;font-family:'DM Mono',monospace;}
+.progress-track{height:6px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:visible;position:relative;}
+.progress-fill{height:100%;width:0%;border-radius:100px;background:linear-gradient(90deg,var(--green),var(--violet));position:relative;box-shadow:0 0 12px rgba(16,185,129,0.5);transition:width 1.4s cubic-bezier(.4,0,.2,1);}
+.progress-fill::after{content:'';position:absolute;right:-5px;top:-4px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(16,185,129,0.3),0 0 12px rgba(16,185,129,0.8);}
+.progress-pct{position:absolute;right:0;top:-22px;font-size:0.65rem;color:var(--green);font-family:'DM Mono',monospace;font-weight:500;}
+.cred-card{padding:20px;}
+.cred-header{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.cred-icon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(139,92,246,0.2));border:1px solid rgba(16,185,129,0.2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:0 0 16px rgba(16,185,129,0.1);}
+.cred-title{font-family:'Outfit',sans-serif;font-size:0.95rem;font-weight:700;}
+.cred-subtitle{font-size:0.68rem;color:var(--muted);margin-top:1px;}
+.cred-status{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:0.65rem;font-weight:600;letter-spacing:0.06em;color:var(--green);text-transform:uppercase;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:20px;padding:4px 10px;}
+.cred-status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s ease-in-out infinite;}
+.cred-field{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px;transition:border-color 0.2s;}
+.cred-field:hover{border-color:rgba(16,185,129,0.2);}
+.cred-field-label{font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600;display:flex;align-items:center;gap:5px;}
+.cred-field-label svg{width:9px;height:9px;stroke:var(--muted);fill:none;stroke-width:2.5;}
+.cred-field-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.cred-val{font-family:'DM Mono',monospace;font-size:0.85rem;font-weight:500;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dots-anim{letter-spacing:5px;font-size:0.6rem;color:var(--muted);}
+.field-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.ibtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;}
+.ibtn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ibtn:hover{border-color:var(--green);color:var(--green);background:rgba(16,185,129,0.08);}
+.ibtn:active{transform:scale(0.88);}
+.reveal-timer{display:none;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--amber);font-weight:500;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:3px 8px;}
+.btn-reveal{height:32px;padding:0 14px;border-radius:9px;border:none;background:linear-gradient(135deg,#059669 0%,#7C3AED 100%);color:#fff;font-size:0.72rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;box-shadow:0 4px 16px rgba(5,150,105,0.4),inset 0 1px 0 rgba(255,255,255,0.15);transition:all 0.2s;white-space:nowrap;font-family:'Outfit',sans-serif;letter-spacing:0.02em;}
+.btn-reveal svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.5;}
+.btn-reveal:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(5,150,105,0.5);}
+.btn-reveal:active{transform:scale(0.95);}
+.pay-card{padding:20px;border:1px solid rgba(16,185,129,0.15);background:linear-gradient(180deg,rgba(16,185,129,0.04),rgba(139,92,246,0.02));}
+.pay-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.pay-icon{width:36px;height:36px;border-radius:11px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);display:flex;align-items:center;justify-content:center;}
+.pay-icon svg{width:16px;height:16px;stroke:var(--green);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.pay-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.025);border:1px solid var(--border);border-radius:12px;margin-bottom:6px;}
+.pay-row:last-child{margin-bottom:0;}
+.pay-month{font-family:'DM Mono',monospace;font-size:0.8rem;font-weight:500;color:var(--text);}
+.pay-val{font-family:'DM Mono',monospace;font-size:0.85rem;font-weight:700;}
+.pay-badge{font-size:0.6rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:20px;}
+.badge-paid{background:rgba(16,185,129,0.12);color:var(--green);border:1px solid rgba(16,185,129,0.25);}
+.badge-pending{background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.25);}
+.badge-late{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);}
+.msg-card{padding:22px;border:1px solid rgba(16,185,129,0.2);background:linear-gradient(180deg,rgba(16,185,129,0.05),rgba(139,92,246,0.03));box-shadow:0 0 30px rgba(16,185,129,0.1);}
+.msg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.msg-title-wrap{display:flex;align-items:center;gap:10px;}
+.msg-icon{width:36px;height:36px;border-radius:11px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);display:flex;align-items:center;justify-content:center;}
+.msg-icon svg{width:16px;height:16px;stroke:var(--cyan);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.msg-count{font-size:0.75rem;font-weight:600;color:var(--green);}
+.banner{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,0.025);border:1px solid var(--border);position:relative;overflow:hidden;}
+.banner::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--green),var(--violet));border-radius:3px 0 0 3px;}
+.banner-emoji-wrap{width:42px;height:42px;font-size:1.2rem;box-shadow:0 0 14px rgba(16,185,129,0.2);}
+.banner-body{flex:1;}
+.banner-text{font-size:1rem;line-height:1.6;color:var(--text);font-weight:500;}
+.banner-text strong{color:var(--text);font-weight:700;}
+.banner.out{animation:bOut .3s ease forwards;}
+.banner.in{animation:bIn .35s ease forwards;}
+@keyframes bOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-12px)}}
+@keyframes bIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
+.banner-dots{display:flex;justify-content:center;gap:6px;margin-top:12px;}
+.banner-dots span{height:3px;border-radius:3px;background:rgba(255,255,255,0.15);transition:all 0.35s ease;width:16px;}
+.banner-dots span.on{background:var(--green);width:28px;box-shadow:0 0 8px rgba(16,185,129,0.5);}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(10,16,30,0.95);border:1px solid rgba(16,185,129,0.25);border-radius:14px;padding:10px 20px;font-size:0.78rem;color:var(--green);font-weight:600;box-shadow:0 8px 40px rgba(0,0,0,0.5);opacity:0;transition:all 0.35s cubic-bezier(.4,0,.2,1);pointer-events:none;white-space:nowrap;z-index:300;backdrop-filter:blur(20px);display:flex;align-items:center;gap:8px;}
+.toast::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.toast.warn{color:var(--amber);border-color:rgba(245,158,11,0.25);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#loginScreen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+#loginScreen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(16,185,129,0.1),transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(139,92,246,0.1),transparent 50%);}
+.login-box{position:relative;z-index:1;width:90%;max-width:360px;background:rgba(10,15,28,0.9);border:1px solid rgba(255,255,255,0.09);border-radius:26px;padding:38px 28px 32px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(16,185,129,0.08);backdrop-filter:blur(30px);animation:popIn 0.5s cubic-bezier(.4,0,.2,1) both;}
+@keyframes popIn{from{opacity:0;transform:scale(0.94) translateY(12px)}to{opacity:1;transform:none}}
+.login-logo{width:80px;height:80px;border-radius:22px;overflow:hidden;margin:0 auto 18px;border:1px solid rgba(16,185,129,0.3);box-shadow:0 0 30px rgba(16,185,129,0.2);}
+.login-logo img{width:100%;height:100%;object-fit:cover;display:block;}
+.login-title{font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:4px;}
+.login-sub{font-size:0.8rem;color:var(--muted2);margin-bottom:28px;}
+.field-wrap{position:relative;margin-bottom:10px;text-align:left;}
+.field-wrap input{width:100%;height:48px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:13px;color:var(--text);padding:0 44px 0 46px;font-size:0.88rem;font-family:'Outfit',sans-serif;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+.field-wrap input::placeholder{color:var(--muted);}
+.field-wrap input:focus{border-color:rgba(16,185,129,0.4);box-shadow:0 0 0 3px rgba(16,185,129,0.1);}
+.field-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+.field-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.eye-btn{position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);transition:color 0.2s;padding:4px;display:flex;align-items:center;}
+.eye-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.eye-btn:hover{color:var(--text);}
+.remember-row{display:flex;align-items:center;gap:8px;margin:12px 0 18px;text-align:left;}
+.remember-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--green);cursor:pointer;flex-shrink:0;}
+.remember-row label{font-size:0.8rem;color:var(--muted2);cursor:pointer;user-select:none;}
+.btn-login{width:100%;height:48px;border:none;border-radius:14px;background:linear-gradient(135deg,#059669,#7C3AED);color:#fff;font-weight:700;font-size:0.9rem;cursor:pointer;letter-spacing:0.04em;font-family:'Outfit',sans-serif;box-shadow:0 6px 24px rgba(5,150,105,0.4),inset 0 1px 0 rgba(255,255,255,0.15);transition:all 0.2s;position:relative;overflow:hidden;}
+.btn-login::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);opacity:0;transition:opacity 0.2s;}
+.btn-login:hover::after{opacity:1;}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(5,150,105,0.5);}
+.btn-login:active{transform:scale(0.98);}
+#loginMsg{margin-top:12px;font-size:0.8rem;color:rgba(240,244,255,0.6);line-height:1.4;}
+#loginMsg.err{color:var(--red);}
+.popup-overlay{position:fixed;inset:0;z-index:9500;background:rgba(4,7,15,0.68);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;padding:22px;}
+.popup-overlay.show{display:flex;animation:fadeIn .25s ease both;}
+.popup-card{width:100%;max-width:360px;background:rgba(10,15,28,0.92);border:1px solid rgba(255,255,255,0.09);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,0.65);backdrop-filter:blur(28px);overflow:hidden;animation:popIn .35s cubic-bezier(.4,0,.2,1) both;position:relative;}
+.popup-card::before{content:'';position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);}
+.popup-head{display:flex;align-items:center;gap:12px;padding:20px 20px 12px;}
+.popup-badge{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,rgba(16,185,129,0.18),rgba(139,92,246,0.18));border:1px solid rgba(16,185,129,0.22);display:flex;align-items:center;justify-content:center;font-size:1.25rem;box-shadow:0 0 20px rgba(16,185,129,0.14);}
+.popup-title{font-family:'Outfit',sans-serif;font-size:1.08rem;font-weight:800;line-height:1.15;}
+.popup-sub{font-size:0.68rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+.popup-body{padding:0 20px 18px;}
+.popup-msg{font-size:0.95rem;line-height:1.65;color:var(--text);font-weight:500;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:16px;padding:16px;}
+.popup-msg strong{color:#fff;font-weight:800;}
+.popup-actions{padding:0 20px 20px;}
+.popup-btn{width:100%;height:48px;border:none;border-radius:14px;background:linear-gradient(135deg,#059669,#7C3AED);color:#fff;font-weight:700;font-size:0.9rem;cursor:pointer;letter-spacing:0.03em;font-family:'Outfit',sans-serif;box-shadow:0 6px 24px rgba(5,150,105,0.4),inset 0 1px 0 rgba(255,255,255,0.15);transition:all .2s;}
+.popup-btn:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(5,150,105,0.5);}
+.popup-btn:active{transform:scale(.98);}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.card{animation:slideUp 0.5s ease both;}
+.cycle-card{animation-delay:0.05s;}
+.cred-card{animation-delay:0.12s;}
+.pay-card{animation-delay:0.17s;}
+.msg-card{animation-delay:0.22s;}
+</style>
+</head>
+<body>
+<div class="ambient"><div class="ambient-orb orb1"></div><div class="ambient-orb orb2"></div><div class="ambient-orb orb3"></div></div>
+<!-- LOGIN -->
+<div id="loginScreen">
+ <div class="login-box">
+   <div class="login-logo"><img src="https://i.ibb.co/6JP034RZ/Whats-App-Image-2026-01-30-at-18-18-51.jpg" alt="BoxPower"></div>
+   <div class="login-title">BoxPower</div>
+   <div class="login-sub">Portal exclusivo de clientes</div>
+   <div class="field-wrap">
+     <div class="field-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+     <input type="email" id="loginEmail" placeholder="seu@email.com" autocomplete="email">
+   </div>
+   <div class="field-wrap">
+     <div class="field-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+     <input type="password" id="loginPass" placeholder="Senha" autocomplete="current-password">
+     <button class="eye-btn" id="eyeBtn" onclick="togglePass()" title="Ver senha">
+       <svg id="eyeIcon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+     </button>
+   </div>
+   <div class="remember-row">
+     <input type="checkbox" id="rememberMe">
+     <label for="rememberMe">Lembrar minha senha</label>
+   </div>
+   <button class="btn-login" onclick="login()">ENTRAR</button>
+   <div id="loginMsg"></div>
+ </div>
+</div>
+
+<!-- HEADER -->
+<header>
+ <div class="header-left">
+   <div class="logo-mark"><img src="https://i.ibb.co/6JP034RZ/Whats-App-Image-2026-01-30-at-18-18-51.jpg" alt="BoxPower"></div>
+   <div class="header-info">
+     <div class="header-hello" id="headerHello">Olá, Cliente 👋</div>
+     <div class="header-brand">BoxPower</div>
+     <div class="header-sub">AdsPower Hub</div>
+   </div>
+ </div>
+ <div class="header-actions">
+   <button class="hbtn" id="refreshBtn" onclick="refreshPortal()" title="Atualizar">
+     <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+   </button>
+   <button class="hbtn" onclick="doLogout()" title="Sair" style="color:#EF4444;border-color:rgba(239,68,68,0.3);">
+     <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+   </button>
+ </div>
+</header>
+
+<main>
+ <!-- CICLO CARD -->
+ <div class="card cycle-card">
+   <svg width="0" height="0" style="position:absolute">
+     <defs>
+       <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+         <stop offset="0%" stop-color="#10B981"/>
+         <stop offset="100%" stop-color="#8B5CF6"/>
+       </linearGradient>
+     </defs>
+   </svg>
+   <div class="cycle-top">
+     <div>
+       <div style="font-size:0.65rem;color:var(--green);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">📅 Ciclo Atual</div>
+       <div class="cycle-dates">
+         <span id="cycleStart">—</span>
+         <span class="cycle-arrow">→</span>
+         <span id="cycleEnd">—</span>
+       </div>
+     </div>
+     <div class="gauge-wrap">
+       <div class="gauge">
+         <svg viewBox="0 0 72 72"><circle class="gauge-track" cx="36" cy="36" r="30"/><circle class="gauge-fill" id="gaugeFill" cx="36" cy="36" r="30"/></svg>
+         <div class="gauge-num" id="gaugeDays">—</div>
+       </div>
+       <div class="gauge-lbl">dias rest.</div>
+     </div>
+   </div>
+   <div style="position:relative;">
+     <div class="progress-labels"><span id="progressStart">—</span><span id="progressEnd">—</span></div>
+     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+   </div>
+ </div>
+
+ <!-- ADSPOWER CREDENTIALS CARD -->
+ <div class="card cred-card">
+   <div class="cred-header">
+     <div class="cred-icon">🔐</div>
+     <div>
+       <div class="cred-title">Credenciais AdsPower</div>
+       <div class="cred-subtitle">Acesse seu perfil de navegação</div>
+     </div>
+     <div class="cred-status" id="credStatus">Ativo</div>
+   </div>
+
+   <!-- PROFILE ID -->
+   <div class="cred-field">
+     <div class="cred-field-label">
+       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+       ID do Perfil AdsPower
+     </div>
+     <div class="cred-field-row">
+       <div class="cred-val" id="ads-profile-id">—</div>
+       <div class="field-actions">
+         <button class="ibtn" onclick="copyText('ads-profile-id','ID copiado!')" title="Copiar ID">
+           <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+         </button>
+       </div>
+     </div>
+   </div>
+
+   <!-- SENHA -->
+   <div class="cred-field">
+     <div class="cred-field-label">
+       <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+       Senha de acesso
+     </div>
+     <div class="cred-field-row">
+       <div class="cred-val">
+         <span class="dots-anim" id="dots-view">• • • • • • • • •</span>
+         <span id="pass-val" style="display:none;"></span>
+       </div>
+       <div class="field-actions">
+         <span class="reveal-timer" id="timer-lbl"></span>
+         <button class="ibtn" id="copy-pass" onclick="copyText('pass-val','Senha copiada!')" style="display:none;" title="Copiar senha">
+           <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+         </button>
+         <button class="btn-reveal" id="reveal-btn" onclick="revealPassword()">
+           <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+           Liberar
+         </button>
+       </div>
+     </div>
+   </div>
+ </div>
+
+ <!-- PAGAMENTOS CARD -->
+ <div class="card pay-card">
+   <div class="pay-header">
+     <div style="display:flex;align-items:center;gap:10px;">
+       <div class="pay-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+       <div>
+         <div style="font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:800;letter-spacing:-0.02em;">Mensalidades</div>
+         <div style="font-size:0.65rem;color:var(--muted);">Histórico de pagamentos</div>
+       </div>
+     </div>
+     <div id="payCount" style="font-size:0.75rem;font-weight:600;color:var(--green);">— meses</div>
+   </div>
+   <div id="payList"><div style="text-align:center;color:var(--muted);font-size:0.8rem;padding:20px 0;">Carregando...</div></div>
+ </div>
+
+ <!-- MESSAGES CARD -->
+ <div class="card msg-card">
+   <div class="msg-header">
+     <div class="msg-title-wrap">
+       <div class="msg-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+       <div>
+         <div style="font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:800;letter-spacing:-0.02em;">Administração</div>
+         <div style="font-size:0.65rem;color:var(--muted);">Avisos e atualizações</div>
+       </div>
+     </div>
+     <div class="msg-count" id="msgCount">— msgs</div>
+   </div>
+   <div class="banner" id="adminBanner">
+     <div class="banner-emoji-wrap" id="bannerEmoji">⏳</div>
+     <div class="banner-body"><div class="banner-text" id="bannerText">Carregando mensagens...</div></div>
+   </div>
+   <div class="banner-dots" id="bannerDots"></div>
+ </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="popup-overlay" id="adminPopupOverlay">
+  <div class="popup-card">
+    <div class="popup-head">
+      <div class="popup-badge" id="popupEmoji">📌</div>
+      <div>
+        <div class="popup-title" id="popupTitle">Aviso</div>
+        <div class="popup-sub">Administração BoxPower</div>
+      </div>
+    </div>
+    <div class="popup-body"><div class="popup-msg" id="popupMessage">Carregando aviso...</div></div>
+    <div class="popup-actions"><button class="popup-btn" id="popupBtn" onclick="closePopup()">Entendi</button></div>
+  </div>
+</div>
+<script>
+const SUPABASE_URL="https://epwmoicgvuprzkcpxjoy.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwd21vaWNndnVwcnprY3B4am95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NDAxMjgsImV4cCI6MjA4NTMxNjEyOH0.pXcCWqGQSS6YMIZeIyfAaGlNaW6Mx2hfDQtVrX4zues";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+/* ── OLHINHO ── */
+let passVisible=false;
+function togglePass(){
+ const i=document.getElementById('loginPass');
+ passVisible=!passVisible;
+ i.type=passVisible?'text':'password';
+ document.getElementById('eyeIcon').innerHTML=passVisible
+  ?'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+  :'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+}
+
+/* ── LEMBRAR SENHA ── */
+(function(){
+ try{
+  const s=localStorage.getItem('bp_creds');
+  if(!s)return;
+  const{e,p}=JSON.parse(s);
+  document.getElementById('loginEmail').value=e||'';
+  document.getElementById('loginPass').value=p||'';
+  document.getElementById('rememberMe').checked=true;
+ }catch(_){}
+})();
+
+/* ── MENSAGENS ── */
+let msgs=[],msgIdx=0,msgTimer=null;
+async function loadMessages(){
+ try{
+  const{data}=await sb.from('admin_messages').select('emoji,message').eq('active',true).order('order');
+  msgs=(data&&data.length)
+   ?data.map(r=>({emoji:r.emoji||'📌',html:r.message}))
+   :[{emoji:'📌',html:'<strong>Bem-vindo.</strong> Portal BoxPower ativo.'},{emoji:'💡',html:'<strong>Dica.</strong> Copie a senha com um clique.'},{emoji:'🛡️',html:'<strong>Segurança.</strong> Senha expira em 15s.'}];
+ }catch(_){
+  msgs=[{emoji:'📌',html:'<strong>Portal BoxPower.</strong> Bem-vindo.'}];
+ }
+ document.getElementById('msgCount').textContent=msgs.length+(msgs.length===1?' msg':' msgs');
+ initBanner();
+}
+
+function initBanner(){
+ if(msgTimer)clearInterval(msgTimer);
+ msgIdx=0;
+ const banner=document.getElementById('adminBanner');
+ const emojiEl=document.getElementById('bannerEmoji');
+ const textEl=document.getElementById('bannerText');
+ const dotsEl=document.getElementById('bannerDots');
+ if(!banner)return;
+ dotsEl.innerHTML=msgs.map((_,i)=>`<span class="${i===0?'on':''}"></span>`).join('');
+ const dots=[...dotsEl.querySelectorAll('span')];
+ function render(i){emojiEl.textContent=msgs[i].emoji;textEl.innerHTML=msgs[i].html;dots.forEach((d,k)=>d.classList.toggle('on',k===i));}
+ function next(){banner.classList.remove('in');banner.classList.add('out');setTimeout(()=>{msgIdx=(msgIdx+1)%msgs.length;render(msgIdx);banner.classList.remove('out');banner.classList.add('in');},320);}
+ render(0);banner.classList.add('in');
+ if(msgs.length>1)msgTimer=setInterval(next,4500);
+}
+
+/* ── CICLO ── */
+function resetCycleUI(){
+ setEl('cycleStart','—');setEl('cycleEnd','—');setEl('gaugeDays','—');
+ setEl('progressStart','—');setEl('progressEnd','—');
+ const bar=document.getElementById('progressFill');if(bar)bar.style.width='0%';
+ const g=document.getElementById('gaugeFill');if(g){g.style.strokeDashoffset=188;g.style.stroke='';}
+ const n=document.getElementById('gaugeDays');if(n)n.style.color='';
+}
+
+function setCredentialState(active){
+ const st=document.getElementById('credStatus');
+ const rb=document.getElementById('reveal-btn');
+ const cp=document.getElementById('copy-pass');
+ const tl=document.getElementById('timer-lbl');
+ const pv=document.getElementById('pass-val');
+ const dv=document.getElementById('dots-view');
+ if(active){
+  if(st){st.textContent='Ativo';st.style.color='var(--green)';st.style.background='rgba(16,185,129,0.08)';st.style.borderColor='rgba(16,185,129,0.2)';}
+  if(rb){rb.style.display='inline-flex';rb.disabled=false;}
+ }else{
+  if(st){st.textContent='Vencido';st.style.color='#EF4444';st.style.background='rgba(239,68,68,0.08)';st.style.borderColor='rgba(239,68,68,0.2)';}
+  if(rb)rb.style.display='none';
+  if(cp)cp.style.display='none';
+  if(tl)tl.style.display='none';
+  if(pv)pv.style.display='none';
+  if(dv)dv.style.display='inline';
+ }
+}
+
+async function loadCycle(){
+ try{
+  resetCycleUI();setCredentialState(false);
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session)return;
+  const userEmail=(session.user.email||'').trim().toLowerCase();
+  const{data:client}=await sb.from('clients').select('id,due_day').ilike('email',userEmail).eq('active',true).maybeSingle();
+  if(!client)return;
+  const{data:payment}=await sb.from('payment_history').select('payment_date').eq('client_id',client.id).in('status',['approved','paid','pago']).order('payment_date',{ascending:false}).limit(1).maybeSingle();
+  if(!payment?.payment_date)return;
+  const inicio=new Date(payment.payment_date);
+  if(isNaN(inicio.getTime()))return;
+  const fim=new Date(inicio);fim.setMonth(fim.getMonth()+1);
+  const hoje=new Date();
+  const ativo=hoje<=fim;
+  const totalMs=Math.max(1,fim-inicio);
+  const passadosMs=Math.max(0,Math.min(totalMs,hoje-inicio));
+  const diasRest=Math.max(0,Math.ceil((fim-hoje)/(1000*60*60*24)));
+  const pct=Math.min(100,Math.max(0,Math.round((passadosMs/totalMs)*100)));
+  const fmt=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  const fmtMes=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).toUpperCase().replace('.','');
+  setEl('cycleStart',fmt(inicio));setEl('cycleEnd',fmt(fim));setEl('gaugeDays',diasRest);
+  setEl('progressStart',fmtMes(inicio));setEl('progressEnd',fmtMes(fim));
+  const bar=document.getElementById('progressFill');if(bar)bar.style.width=pct+'%';
+  const offset=188-(pct/100)*188;
+  const gauge=document.getElementById('gaugeFill');if(gauge)gauge.style.strokeDashoffset=offset;
+  const numEl=document.getElementById('gaugeDays');
+  if(diasRest<=5){if(numEl)numEl.style.color='#EF4444';if(gauge)gauge.style.stroke='#EF4444';}
+  else if(diasRest<=10){if(numEl)numEl.style.color='#F59E0B';}
+  setCredentialState(ativo);
+ }catch(e){console.warn('Erro ciclo:',e);}
+}
+
+/* ── PAGAMENTOS ── */
+async function loadPayments(){
+ const listEl=document.getElementById('payList');
+ const countEl=document.getElementById('payCount');
+ try{
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){listEl.innerHTML='<div style="text-align:center;color:var(--muted);font-size:0.8rem;padding:20px 0;">Faça login para ver pagamentos.</div>';return;}
+  const userEmail=(session.user.email||'').trim().toLowerCase();
+  const{data:client}=await sb.from('clients').select('id').ilike('email',userEmail).maybeSingle();
+  if(!client){listEl.innerHTML='<div style="text-align:center;color:var(--muted);font-size:0.8rem;padding:20px 0;">Nenhum registro encontrado.</div>';return;}
+  const{data:payments,error}=await sb.from('payment_history').select('payment_date,amount,status,month_ref').eq('client_id',client.id).order('payment_date',{ascending:false}).limit(12);
+  if(error||!payments||payments.length===0){listEl.innerHTML='<div style="text-align:center;color:var(--muted);font-size:0.8rem;padding:20px 0;">Nenhum pagamento encontrado.</div>';return;}
+  countEl.textContent=payments.length+' meses';
+  const statusMap={approved:'paid',paid:'paid',pago:'paid',pending:'pending',pendente:'pending',late:'late',atrasado:'late'};
+  const badgeMap={paid:'badge-paid',pending:'badge-pending',late:'badge-late'};
+  const labelMap={paid:'✅ Pago',pending:'⏳ Pendente',late:'⚠️ Atrasado'};
+  const fmtMoney=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const fmtDate=s=>{if(!s)return'—';const d=new Date(s+'T12:00:00');return d.toLocaleDateString('pt-BR');};
+  listEl.innerHTML=payments.map(p=>{
+   const st=statusMap[p.status]||'pending';
+   const ref=p.month_ref||fmtDate(p.payment_date);
+   return`<div class="pay-row">
+    <div><div class="pay-month">${ref}</div><div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">${fmtDate(p.payment_date)}</div></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+     <div class="pay-val" style="color:${st==='paid'?'var(--green)':st==='late'?'var(--red)':'var(--amber)'}">${fmtMoney(p.amount)}</div>
+     <span class="pay-badge ${badgeMap[st]}">${labelMap[st]}</span>
+    </div>
+   </div>`;
+  }).join('');
+ }catch(e){listEl.innerHTML='<div style="text-align:center;color:var(--muted);font-size:0.8rem;padding:20px 0;">Erro ao carregar pagamentos.</div>';console.warn(e);}
+}
+
+/* ── REVEAL ADSPOWER PASSWORD ── */
+let revealTimer=null,countTimer=null;
+async function revealPassword(){
+ const rb=document.getElementById('reveal-btn');
+ if(rb)rb.disabled=true;
+ try{
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){toast('Faça login para liberar a senha.','warn');return;}
+  const{data,error}=await sb.rpc('reveal_adspower_password');
+  if(error){
+   const m=(error.message||'').toLowerCase();
+   toast(m.includes('payment')||m.includes('vencido')?'Senha bloqueada: mensalidade pendente.':m.includes('not_allowed')?'Email não autorizado.':'Não foi possível liberar. Tente novamente.','warn');
+   return;
+  }
+  if(data?.profile_id)setEl('ads-profile-id',data.profile_id);
+  if(data?.password){
+   setEl('pass-val',data.password);
+   document.getElementById('pass-val').style.display='inline';
+   document.getElementById('dots-view').style.display='none';
+   const cp=document.getElementById('copy-pass');
+   const rb2=document.getElementById('reveal-btn');
+   const tl=document.getElementById('timer-lbl');
+   if(cp)cp.style.display='inline-flex';
+   if(rb2)rb2.style.display='none';
+   if(tl)tl.style.display='inline';
+   let secs=15;tl.textContent=secs+'s';
+   if(countTimer)clearInterval(countTimer);
+   countTimer=setInterval(()=>{secs--;tl.textContent=secs+'s';if(secs<=0)clearInterval(countTimer);},1000);
+   if(revealTimer)clearTimeout(revealTimer);
+   revealTimer=setTimeout(()=>{
+    document.getElementById('pass-val').style.display='none';
+    document.getElementById('dots-view').style.display='inline';
+    if(cp)cp.style.display='none';
+    if(rb2)rb2.style.display='inline-flex';
+    if(tl)tl.style.display='none';
+   },15000);
+  }
+ }catch(e){toast('Erro ao liberar senha.','warn');}
+ finally{if(rb)rb.disabled=false;}
+}
+
+/* ── LOGIN ── */
+async function login(){
+ const email=(document.getElementById('loginEmail').value||'').trim().toLowerCase();
+ const pass=(document.getElementById('loginPass').value||'');
+ const msgEl=document.getElementById('loginMsg');
+ msgEl.textContent='';msgEl.className='';
+ if(!email||!pass){msgEl.textContent='Preencha e-mail e senha.';msgEl.className='err';return;}
+ if(document.getElementById('rememberMe').checked){
+  localStorage.setItem('bp_creds',JSON.stringify({e:email,p:pass}));
+ }else{localStorage.removeItem('bp_creds');}
+ const{error}=await sb.auth.signInWithPassword({email,password:pass});
+ if(error){msgEl.textContent='Login inválido. Verifique seus dados.';msgEl.className='err';return;}
+ const nome=email.split('@')[0];
+ const nomeF=nome.charAt(0).toUpperCase()+nome.slice(1);
+ setEl('headerHello','Olá, '+nomeF+' 👋');
+ document.getElementById('loginScreen').style.display='none';
+ showToast('Bem-vindo, '+nomeF+'!');
+ await Promise.all([loadMessages(),loadCycle(),loadPayments(),loadPopup()]);
+}
+
+/* ── LOGOUT ── */
+async function doLogout(){
+ await sb.auth.signOut().catch(()=>{});
+ document.getElementById('loginScreen').style.display='flex';
+ document.getElementById('loginEmail').value='';
+ document.getElementById('loginPass').value='';
+ showToast('Até logo!');
+}
+
+/* ── REFRESH ── */
+async function refreshPortal(){
+ const btn=document.getElementById('refreshBtn');
+ btn.classList.add('spin');
+ await Promise.all([loadMessages(),loadCycle(),loadPayments()]);
+ setTimeout(()=>{btn.classList.remove('spin');showToast('Portal atualizado!');},700);
+}
+
+/* ── POPUP ── */
+let currentPopup=null;
+function openPopup(data){
+ currentPopup=data||null;
+ setEl('popupEmoji',data?.emoji||'📌');
+ setEl('popupTitle',data?.title||'Aviso');
+ const msgEl=document.getElementById('popupMessage');
+ if(msgEl)msgEl.innerHTML=data?.message||'Mensagem indisponível.';
+ const btn=document.getElementById('popupBtn');
+ if(btn)btn.textContent=data?.button_text||'Entendi';
+ document.getElementById('adminPopupOverlay').classList.add('show');
+}
+function closePopup(){
+ document.getElementById('adminPopupOverlay').classList.remove('show');
+ if(currentPopup?.show_once&&currentPopup?.id){
+  try{localStorage.setItem('bp_popup_seen_'+currentPopup.id,'1');}catch(_){}
+ }
+}
+async function loadPopup(){
+ try{
+  const{data,error}=await sb.from('admin_popup').select('id,title,message,button_text,active,show_once,priority,created_at').eq('active',true).order('priority',{ascending:false}).order('created_at',{ascending:false}).limit(1).maybeSingle();
+  if(error||!data)return;
+  if(data.show_once){try{if(localStorage.getItem('bp_popup_seen_'+data.id)==='1')return;}catch(_){}}
+  openPopup(data);
+ }catch(e){console.warn(e);}
+}
+
+/* ── UTILS ── */
+function copyText(id,msg){
+ const el=document.getElementById(id);if(!el)return;
+ const txt=el.textContent.trim();
+ navigator.clipboard.writeText(txt).catch(()=>{const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);});
+ showToast(msg);
+}
+function showToast(msg,type){
+ const t=document.getElementById('toast');
+ t.textContent=msg;
+ t.className='toast'+(type==='warn'?' warn':'')+' show';
+ setTimeout(()=>t.classList.remove('show'),2800);
+}
+function toast(msg,type){showToast(msg,type);}
+function setEl(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+
+/* ── AUTO-LOGIN ── */
+(async function init(){
+ try{
+  const{data:{session}}=await sb.auth.getSession();
+  if(session&&session.user){
+   const nome=session.user.email.split('@')[0];
+   const nomeF=nome.charAt(0).toUpperCase()+nome.slice(1);
+   setEl('headerHello','Olá, '+nomeF+' 👋');
+   document.getElementById('loginScreen').style.display='none';
+   await Promise.all([loadMessages(),loadCycle(),loadPayments(),loadPopup()]);
+  }else{
+   loadMessages();
+  }
+ }catch(e){loadMessages();}
+})();
+</script>
+</body>
+</html>

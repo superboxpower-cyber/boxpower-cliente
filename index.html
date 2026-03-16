@@ -504,7 +504,7 @@ async function login(){
 
  // VERIFICAR SE É CLIENTE BOXPOWER (não VEO3)
  const{data:client,error:cErr}=await sb.from('clients')
-  .select('id,name,email,active,product,adspower_profile_id,due_day')
+  .select('id,name,email,active,product_id,due_day,agreed_price')
   .ilike('email',email)
   .maybeSingle();
 
@@ -516,9 +516,9 @@ async function login(){
   msgEl.textContent='Conta inativa. Contate o suporte.';msgEl.className='err';
   await sb.auth.signOut();return;
  }
- // Bloquear clientes VEO3 (sem adspower_profile_id e produto veo3)
- const prod=(client.product||'').toLowerCase();
- if(prod==='veo3'||prod==='veo'){
+ // Bloquear clientes VEO3
+ const veoIds=['783f332d-1213-4c14-b1ca-26f06577c898','01ccb898-f88f-4bd3-8bd9-33650abf961c'];
+ if(veoIds.includes(client.product_id)){
   msgEl.textContent='Este portal é exclusivo para clientes BoxPower AdsPower.';msgEl.className='err';
   await sb.auth.signOut();return;
  }
@@ -728,10 +728,11 @@ function setEl(id,val){const el=document.getElementById(id);if(el)el.textContent
   const{data:{session}}=await sb.auth.getSession();
   if(session&&session.user){
    const email=(session.user.email||'').trim().toLowerCase();
-   const{data:client}=await sb.from('clients').select('id,name,email,active,product,adspower_profile_id,due_day').ilike('email',email).maybeSingle();
+   const{data:client}=await sb.from('clients').select('id,name,email,active,product_id,due_day,agreed_price').ilike('email',email).maybeSingle();
    if(client&&client.active){
-    const prod=(client.product||'').toLowerCase();
-    if(prod!=='veo3'&&prod!=='veo'){currentClient=client;await enterPortal(client);return;}
+
+    const veoIds2=['783f332d-1213-4c14-b1ca-26f06577c898','01ccb898-f88f-4bd3-8bd9-33650abf961c'];
+    if(!veoIds2.includes(client.product_id)){currentClient=client;await enterPortal(client);return;}
    }
    await sb.auth.signOut();
   }

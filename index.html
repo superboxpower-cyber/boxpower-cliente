@@ -394,7 +394,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
     <div class="cred-fields">
      <!-- PROFILE ID -->
      <div class="cred-field">
-      <div class="cred-field-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>ID do Perfil</div>
+      <div class="cred-field-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Email do ADSPOWER</div>
       <div class="cred-field-row">
        <div class="cred-val" id="ads-profile-id">—</div>
        <div class="field-actions">
@@ -404,7 +404,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
      </div>
      <!-- SENHA -->
      <div class="cred-field">
-      <div class="cred-field-label"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Senha de acesso</div>
+      <div class="cred-field-label"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Senha do ADSPOWER</div>
       <div class="cred-field-row">
        <div class="cred-val"><span class="dots-anim" id="dots-view">• • • • • • • • •</span><span id="pass-val" style="display:none;"></span></div>
        <div class="field-actions">
@@ -417,7 +417,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
      <!-- INSTRUCOES -->
      <div class="cred-field full" style="background:rgba(16,185,129,0.04);border-color:rgba(16,185,129,0.15);">
       <div class="cred-field-label">💡 Como usar</div>
-      <div style="font-size:0.82rem;color:var(--muted2);line-height:1.7;">1. Abra o AdsPower e faça login<br>2. Copie o ID do Perfil e cole na busca<br>3. Clique em "Liberar" para ver a senha (expira em 15s)<br>4. Use as credenciais para acessar seu perfil exclusivo</div>
+      <div style="font-size:0.82rem;color:var(--muted2);line-height:1.7;">1. Faça o download do AdsPower: <a href="https://www.adspower.com/pt/" target="_blank" style="color:var(--green);font-weight:600;">adspower.com/pt</a><br><span style="font-size:0.75rem;color:var(--muted);">⚠️ Não faça login na versão web — precisa baixar o app.</span><br><br>2. Clique em "Liberar" para ver a senha (expira em 15s)<br><br>3. Faça login no AdsPower com os dados acima<br><br>4. Use as credenciais para acessar seu perfil exclusivo</div>
      </div>
     </div>
    </div>
@@ -427,14 +427,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
   <div class="section" id="section-mensalidades">
    <div class="section-title">Mensalidades</div>
    <div class="section-sub">Histórico completo de pagamentos da sua conta</div>
-   <!-- SUMMARY -->
-   <div class="pay-header-row">
-    <div class="pay-summary">
-     <div class="pay-sum-chip"><div class="pay-sum-val" style="color:var(--green);" id="sumPaid">R$ 0</div><div class="pay-sum-lbl">Total Pago</div></div>
-     <div class="pay-sum-chip"><div class="pay-sum-val" style="color:var(--amber);" id="sumPending">R$ 0</div><div class="pay-sum-lbl">Pendente</div></div>
-     <div class="pay-sum-chip"><div class="pay-sum-val" style="color:var(--muted2);" id="sumMonths">0</div><div class="pay-sum-lbl">Meses Total</div></div>
-    </div>
-   </div>
+
    <!-- TABLE -->
    <div class="card" style="padding:0;overflow:hidden;">
     <table class="pay-table" id="payTable">
@@ -633,13 +626,13 @@ async function loadPayments(client){
   const bMap={paid:'badge-paid',pending:'badge-pending',late:'badge-late'};
   const lMap={paid:'✅ Pago',pending:'⏳ Pendente',late:'⚠️ Atrasado'};
   const fmtM=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-  const fmtD=s=>{if(!s)return'—';const d=new Date(s+'T12:00:00');return d.toLocaleDateString('pt-BR');};
+  const fmtD=s=>{if(!s||s==='-')return'—';const d=s.includes('T')?new Date(s):new Date(s+'T12:00:00');return isNaN(d.getTime())?'—':d.toLocaleDateString('pt-BR');};
   let totalP=0,totalPending=0;
   const rows=pays.map(p=>{
    const st=stMap[p.status]||'pending';
    if(st==='paid')totalP+=Number(p.amount||0);
    else if(st==='pending')totalPending+=Number(p.amount||0);
-   return`<tr><td style="font-weight:600;">${p.month_ref||fmtD(p.payment_date)}</td><td style="font-family:'DM Mono',monospace;color:var(--muted2);">${fmtD(p.payment_date)}</td><td class="pay-amount" style="color:${st==='paid'?'var(--green)':st==='late'?'var(--red)':'var(--amber)'};">${fmtM(p.amount)}</td><td style="font-family:'DM Mono',monospace;color:var(--muted2);">${fmtD(p.due_date)}</td><td><span class="pay-badge ${bMap[st]}">${lMap[st]}</span></td></tr>`;
+   return`<tr><td style="font-weight:600;">${(r=>{if(!r)return fmtD(p.payment_date);const[yr,mo]=r.split('-');return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][+mo-1]+'/'+yr;})(p.reference_month)}</td><td style="font-family:'DM Mono',monospace;color:var(--muted2);">${fmtD(p.payment_date)}</td><td class="pay-amount" style="color:${st==='paid'?'var(--green)':st==='late'?'var(--red)':'var(--amber)'};">${fmtM(p.amount)}</td><td style="font-family:'DM Mono',monospace;color:var(--muted2);">${fmtD(p.due_date)}</td><td><span class="pay-badge ${bMap[st]}">${lMap[st]}</span></td></tr>`;
   }).join('');
   tbody.innerHTML=rows;
   setEl('sumPaid',Number(totalP).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}));

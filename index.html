@@ -431,7 +431,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
    <!-- TABLE -->
    <div class="card" style="padding:0;overflow:hidden;">
     <table class="pay-table" id="payTable">
-     <thead><tr><th>Referência</th><th>Data</th><th>Valor</th><th>Vencimento</th><th>Status</th></tr></thead>
+     <thead><tr><th>Referência</th><th>Data Pgto</th><th>Valor</th><th>Vencimento</th><th>Status</th></tr></thead>
      <tbody id="payBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px;">Carregando...</td></tr></tbody>
     </table>
    </div>
@@ -632,7 +632,7 @@ async function loadPayments(client){
    const st=stMap[p.status]||'pending';
    if(st==='paid')totalP+=Number(p.amount||0);
    else if(st==='pending')totalPending+=Number(p.amount||0);
-   return`<tr><td style="font-weight:600;">${(r=>{if(!r)return fmtD(p.payment_date);const[yr,mo]=r.split('-');return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][+mo-1]+'/'+yr;})(p.reference_month)}</td><td style="font-family:'DM Mono',monospace;color:var(--muted2);">${fmtD(p.payment_date)}</td><td class="pay-amount" style="color:${st==='paid'?'var(--green)':st==='late'?'var(--red)':'var(--amber)'};">${fmtM(p.amount)}</td><td style="font-family:'DM Mono',monospace;color:var(--muted2);">${fmtD(p.due_date)}</td><td><span class="pay-badge ${bMap[st]}">${lMap[st]}</span></td></tr>`;
+   return`<tr><td style="font-weight:600;">${(r=>{const rm=r||p.payment_date?.substring(0,7);if(!rm)return'—';const[yr,mo]=rm.split('-');return['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][+mo-1]+'/'+yr;})(p.reference_month)}</td><td style="font-family:'DM Mono',monospace;color:var(--muted2);">${fmtD(p.payment_date)}</td><td class="pay-amount" style="color:${st==='paid'?'var(--green)':st==='late'?'var(--red)':'var(--amber)'};">${fmtM(p.amount)}</td><td style="font-family:'DM Mono',monospace;color:var(--muted2);">${(()=>{try{const rm=p.reference_month||p.payment_date?.substring(0,7);if(!rm)return'—';const[yr,mo]=rm.split('-');const dd=currentClient?.due_day||1;const dt=new Date(+yr,+mo-1,dd);return dt.toLocaleDateString('pt-BR');}catch(e){return'—';}})()}</td><td><span class="pay-badge ${bMap[st]}">${lMap[st]}</span></td></tr>`;
   }).join('');
   tbody.innerHTML=rows;
   setEl('sumPaid',Number(totalP).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}));

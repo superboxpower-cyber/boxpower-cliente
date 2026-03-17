@@ -31,7 +31,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 /* LAYOUT */
 #app{display:flex;min-height:100vh;position:relative;z-index:1;}
 /* SIDEBAR */
-.sidebar{width:var(--sidebar-w);min-height:100vh;background:rgba(4,7,15,0.8);border-right:1px solid var(--border);backdrop-filter:blur(24px);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:40;}
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:rgba(4,7,15,0.8);border-right:1px solid var(--border);backdrop-filter:blur(24px);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:200;}
 .sidebar-logo{padding:24px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
 .logo-img{width:44px;height:44px;border-radius:12px;overflow:hidden;border:1px solid var(--border-green);box-shadow:0 0 18px rgba(16,185,129,0.2);}
 .logo-img img{width:100%;height:100%;object-fit:cover;display:block;}
@@ -48,7 +48,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 .user-email{font-size:0.68rem;color:var(--muted);margin-top:3px;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 /* NAV */
 .sidebar-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px;}
-.nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;cursor:pointer;transition:all 0.2s;color:var(--muted2);font-size:0.9rem;font-weight:500;border:1px solid transparent;text-decoration:none;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;transition:all 0.2s;color:var(--muted2);font-size:0.9rem;font-weight:500;border:1px solid transparent;text-decoration:none;}
 .nav-item:hover{background:var(--glass2);color:var(--text);}
 .nav-item.active{background:rgba(16,185,129,0.1);color:var(--green);border-color:rgba(16,185,129,0.2);}
 .nav-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
@@ -224,7 +224,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
  .grid-2,.grid-3,.cred-fields,.msg-inner{grid-template-columns:1fr;}
  .cred-field.full{grid-column:auto;}
  .pay-summary{flex-direction:column;}
- .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:39;}
+ .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:199;-webkit-tap-highlight-color:transparent;}
  .sidebar-overlay.show{display:block;}
 }
 .mobile-topbar{display:none;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(4,7,15,0.85);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);margin:-16px -16px 16px;}
@@ -258,7 +258,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
   </div>
   <div class="field-wrap">
    <div class="field-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-   <input type="password" id="loginPass" placeholder="Senha" autocomplete="current-password">
+   <input type="number" maxlength="6" inputmode="numeric" pattern="\d{6}" id="loginPass" placeholder="PIN (6 dígitos)" autocomplete="current-password">
    <button class="eye-btn" onclick="togglePass()"><svg id="eyeIcon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
   </div>
   <div class="remember-row">
@@ -512,34 +512,26 @@ function togglePass(){
 /* ── LOGIN ── */
 async function login(){
  const email=(document.getElementById('loginEmail').value||'').trim().toLowerCase();
- const pass=(document.getElementById('loginPass').value||'');
+ const pin=(document.getElementById('loginPass').value||'').trim();
  const msgEl=document.getElementById('loginMsg');
  msgEl.textContent='';msgEl.className='';
- if(!email||!pass){msgEl.textContent='Preencha e-mail e senha.';msgEl.className='err';return;}
+ if(!email||!pin){msgEl.textContent='Preencha e-mail e PIN.';msgEl.className='err';return;}
+ if(!/^[0-9]{6}$/.test(pin)){msgEl.textContent='PIN deve ter 6 dígitos numéricos.';msgEl.className='err';return;}
  msgEl.textContent='Verificando acesso...';
 
- // 1. Buscar cliente ANTES do signIn (anon key funciona sem RLS de autenticado)
- const{data:client,error:cErr}=await sb.from('clients')
-  .select('id,name,email,active,product_id,due_day,agreed_price')
-  .ilike('email',email)
-  .maybeSingle();
-
- if(cErr){msgEl.textContent='Erro ao verificar cadastro: '+cErr.message;msgEl.className='err';return;}
- if(!client){msgEl.textContent='Email nao cadastrado no BoxPower.';msgEl.className='err';return;}
- if(!client.active){msgEl.textContent='Conta inativa. Contate o suporte.';msgEl.className='err';return;}
- const veoIds=['783f332d-1213-4c14-b1ca-26f06577c898','01ccb898-f88f-4bd3-8bd9-33650abf961c'];
- if(veoIds.includes(client.product_id)){msgEl.textContent='Portal exclusivo BoxPower/AdsPower.';msgEl.className='err';return;}
-
- // 2. Agora autentica no Supabase
- const{error}=await sb.auth.signInWithPassword({email,password:pass});
- if(error){msgEl.textContent='Senha incorreta. Verifique seus dados.';msgEl.className='err';return;}
+ const{data:result,error}=await sbPublic.rpc('validate_bp_pin',{p_email:email,p_pin:pin});
+ if(error||!result){msgEl.textContent='Erro ao verificar acesso.';msgEl.className='err';return;}
+ if(result.error){
+  const errs={'invalid_credentials':'PIN ou e-mail incorretos.','portal_exclusivo_boxpower':'Portal exclusivo BoxPower.'};
+  msgEl.textContent=errs[result.error]||'Acesso negado.';msgEl.className='err';return;
+ }
 
  if(document.getElementById('rememberMe').checked){
-  localStorage.setItem('bp_creds',JSON.stringify({e:email,p:pass}));
+  localStorage.setItem('bp_creds',JSON.stringify({e:email,p:pin}));
  }else{localStorage.removeItem('bp_creds');}
 
- currentClient=client;
- await enterPortal(client);
+ currentClient=result;
+ await enterPortal(result);
 }
 
 async function enterPortal(client){
@@ -760,16 +752,16 @@ function setEl(id,val){const el=document.getElementById(id);if(el)el.textContent
 /* ── AUTO-LOGIN ── */
 (async function init(){
  try{
-  const{data:{session}}=await sb.auth.getSession();
-  if(session&&session.user){
-   const email=(session.user.email||'').trim().toLowerCase();
-   const{data:client}=await sbPublic.from('clients').select('id,name,email,active,product_id,due_day,agreed_price').ilike('email',email).maybeSingle();
-   if(client&&client.active){
-
-    const veoIds2=['783f332d-1213-4c14-b1ca-26f06577c898','01ccb898-f88f-4bd3-8bd9-33650abf961c'];
-    if(!veoIds2.includes(client.product_id)){currentClient=client;await enterPortal(client);return;}
+  const saved=localStorage.getItem('bp_creds');
+  if(saved){
+   const{e,p}=JSON.parse(saved);
+   if(e&&p&&/^\d{6}$/.test(p)){
+    const{data:result,error}=await sbPublic.rpc('validate_bp_pin',{p_email:e,p_pin:p});
+    if(!error&&result&&!result.error){
+     currentClient=result;await enterPortal(result);return;
+    }
+    localStorage.removeItem('bp_creds');
    }
-   await sb.auth.signOut();
   }
   loadMessages();
  }catch(e){loadMessages();}

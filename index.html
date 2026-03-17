@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -477,6 +477,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 // Public client - always anon, used for reading clients table (avoids RLS session issue)
 const sbPublic=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 let currentClient=null;
+let currentPin=null;
 
 /* ── 4-DIGIT ID from UUID ── */
 function makeClientId(uuid){
@@ -531,6 +532,7 @@ async function login(){
  }else{localStorage.removeItem('bp_creds');}
 
  currentClient=result;
+ currentPin=pin;
  await enterPortal(result);
 }
 
@@ -550,6 +552,7 @@ async function enterPortal(client){
 async function doLogout(){
  await sb.auth.signOut().catch(()=>{});
  currentClient=null;
+ currentPin=null;
  document.getElementById('loginScreen').style.display='flex';
  document.getElementById('loginEmail').value='';
  document.getElementById('loginPass').value='';
@@ -705,13 +708,31 @@ let revealTimer=null,countTimer=null;
 async function revealPassword(){
  const rb=document.getElementById('reveal-btn');if(rb)rb.disabled=true;
  try{
-  const{data:{session}}=await sb.auth.getSession();
-  if(!session){toast('Faça login.','warn');return;}
-  const{data,error}=await sb.rpc('reveal_adspower_password');
-  if(error){toast((error.message||'').includes('payment')?'Senha bloqueada: mensalidade pendente.':'Erro ao liberar. Contate o suporte.','warn');return;}
-  if(data?.profile_id)setEl('ads-profile-id',data.profile_id);
-  if(data?.password){
-   setEl('pass-val',data.password);
+  if(!currentClient?.email || !currentPin){
+   toast('Faça login novamente.','warn');
+   return;
+  }
+  const { data, error } = await sbPublic.rpc('validate_bp_pin', {
+   p_email: currentClient.email,
+   p_pin: currentPin
+  });
+
+  if(error || !data || data.error){
+   toast('Erro ao liberar. Faça login novamente.','warn');
+   return;
+  }
+
+  const senha = data.adspower_password;
+  const perfil = data.adspower_login || '';
+
+  if(!senha){
+   toast('Senha não disponível. Contate o suporte.','warn');
+   return;
+  }
+
+  if(perfil)setEl('ads-profile-id',perfil);
+  if(senha){
+   setEl('pass-val',senha);
    document.getElementById('pass-val').style.display='inline';
    document.getElementById('dots-view').style.display='none';
    const cp=document.getElementById('copy-pass'),rb2=document.getElementById('reveal-btn'),tl=document.getElementById('timer-lbl');
@@ -758,7 +779,9 @@ function setEl(id,val){const el=document.getElementById(id);if(el)el.textContent
    if(e&&p&&/^\d{6}$/.test(p)){
     const{data:result,error}=await sbPublic.rpc('validate_bp_pin',{p_email:e,p_pin:p});
     if(!error&&result&&!result.error){
-     currentClient=result;await enterPortal(result);return;
+     currentClient=result;
+     currentPin=p;
+     await enterPortal(result);return;
     }
     localStorage.removeItem('bp_creds');
    }

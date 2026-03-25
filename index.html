@@ -586,54 +586,7 @@ async function loadProducts(client){
 }
 
 /* ── LEGACY DELETED ── */
-function resetCycleUI(){
- setEl('cycleStart','—');setEl('cycleEnd','—');setEl('gaugeDays','—');
- setEl('progressStart','—');setEl('progressEnd','—');setEl('statStatus','—');setEl('statDue','—');
- const bar=document.getElementById('progressFill');if(bar)bar.style.width='0%';
- const g=document.getElementById('gaugeFill');if(g){g.style.strokeDashoffset=235;g.style.stroke='';}
-}
 
-function setCredentialState(active){
- const st=document.getElementById('credStatus');
- const rb=document.getElementById('reveal-btn');
- if(active){
-  if(st){st.textContent='Ativo';st.style.color='var(--green)';st.style.background='rgba(16,185,129,0.08)';st.style.borderColor='rgba(16,185,129,0.2)';}
-  if(rb){rb.style.display='inline-flex';rb.disabled=false;}
- }else{
-  if(st){st.textContent='Vencido';st.style.color='#EF4444';st.style.background='rgba(239,68,68,0.08)';st.style.borderColor='rgba(239,68,68,0.2)';}
-  if(rb)rb.style.display='none';
- }
-}
-
-async function loadProducts(client){
- try{
-  resetCycleUI();setCredentialState(false);
-  const c=client||currentClient;if(!c)return;
-  const{data:payment}=await sbPublic.from('payment_history').select('payment_date,product_id,reference_month').eq('client_id',c.id).in('status',['approved','paid','pago']).order('payment_date',{ascending:false}).limit(1).maybeSingle();
-  if(!payment?.payment_date)return;
-  const inicio=new Date(payment.payment_date);if(isNaN(inicio.getTime()))return;
-  const fim=new Date(inicio);fim.setMonth(fim.getMonth()+1);
-  const hoje=new Date();const ativo=hoje<=fim;
-  const totalMs=Math.max(1,fim-inicio);
-  const passadosMs=Math.max(0,Math.min(totalMs,hoje-inicio));
-  const diasRest=Math.max(0,Math.ceil((fim-hoje)/(1000*60*60*24)));
-  const pct=Math.min(100,Math.max(0,Math.round((passadosMs/totalMs)*100)));
-  const fmt=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-  const fmtMes=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).toUpperCase().replace('.','');
-  setEl('cycleStart',fmt(inicio));setEl('cycleEnd',fmt(fim));setEl('gaugeDays',diasRest);
-  setEl('progressStart',fmtMes(inicio));setEl('progressEnd',fmtMes(fim));
-  setEl('statPlan','BoxPower');
-  setEl('statStatus',ativo?'Ativo':'Vencido');
-  setEl('statDue','Dia '+fim.getDate());
-  const bar=document.getElementById('progressFill');if(bar)bar.style.width=pct+'%';
-  const offset=235-(pct/100)*235;
-  const gauge=document.getElementById('gaugeFill');if(gauge)gauge.style.strokeDashoffset=offset;
-  const numEl=document.getElementById('gaugeDays');
-  if(diasRest<=5){if(numEl)numEl.style.color='#EF4444';if(gauge)gauge.style.stroke='#EF4444';}
-  else if(diasRest<=10){if(numEl)numEl.style.color='#F59E0B';}
-  setCredentialState(ativo);
- }catch(e){console.warn('Erro ciclo:',e);}
-}
 
 /* ── PAGAMENTOS ── */
 async function loadPayments(client){

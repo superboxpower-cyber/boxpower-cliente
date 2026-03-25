@@ -508,16 +508,24 @@ const PRODUCT_CATALOG = {
 
 async function loadProducts(client){
   const grid = document.getElementById('productsGrid');
+  if(!grid) return;
   grid.innerHTML = '';
-  const prods = client.products ? client.products.filter(x => x) : [];
   
-  if (prods.length === 0) {
-    grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 20px;">Nenhuma assinatura ativa encontrada.</div>';
-    return;
+  const c = client || currentClient;
+  if(!c) return;
+  
+  // Safely parse products if it came stringified
+  let prodsData = c.products;
+  if(typeof prodsData === 'string') {
+    try { prodsData = JSON.parse(prodsData); } catch(e) { prodsData = []; }
   }
+  const prods = Array.isArray(prodsData) ? prodsData.filter(x => x && x !== 'null') : [];
   
   let html = '';
-  for (let pid of prods) {
+  if (prods.length === 0) {
+    html += '<div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--muted); border: 1px dashed rgba(255,255,255,0.15); border-radius: 20px; font-weight: 500;">Nenhuma assinatura de produto ativa localizada na sua conta.</div>';
+  } else {
+    for (let pid of prods) {
     const meta = PRODUCT_CATALOG[pid] || { name: "Acesso Liberado", icon: "💎", color: "--green", colorRaw: "16,185,129" };
     
     html += `
@@ -561,7 +569,8 @@ async function loadProducts(client){
      }
      
     html += `</div>`;
-  }
+    }
+  } // fechar o else
   
   // Upsell Card
   html += `

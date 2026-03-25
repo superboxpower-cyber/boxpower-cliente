@@ -777,11 +777,11 @@ async function revealPassword(){
    return;
   }
 
-  const senha = data.adspower_password;
-  const perfil = data.adspower_login || '';
+  const senha = data.adspower_password || currentClient?.adspower_password || '';
+  const perfil = data.adspower_login || currentClient?.adspower_login || '';
 
   if(!senha){
-   toast('Senha não disponível. Contate o suporte.','warn');
+   toast('Senha ainda não disponível. Atualize a página (F5) e tente novamente.','warn');
    return;
   }
 

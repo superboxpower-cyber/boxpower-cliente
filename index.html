@@ -532,7 +532,21 @@ async function loadProducts(client){
     <div class="card cred-card" style="margin-bottom:0;">
      <div class="cred-header">
       <div class="cred-icon" style="background:linear-gradient(135deg,rgba(${meta.colorRaw},0.2),rgba(${meta.colorRaw},0.05));border-color:rgba(${meta.colorRaw},0.3);">${meta.icon}</div>
-      <div><div class="cred-title">${meta.name}</div><div class="cred-subtitle">Produto Ativo</div></div>
+             <div>
+        <div class="cred-title">${meta.name}</div>
+        <div class="cred-subtitle">Produto Ativo</div>
+        ${(() => {
+          const lp = c?.last_payment ? new Date(c.last_payment) : null;
+          if (!lp) return '';
+          const dd = c?.due_day || lp.getDate();
+          const start = lp.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'});
+          const endDate = new Date(lp);
+          endDate.setMonth(endDate.getMonth() + 1);
+          endDate.setDate(dd);
+          const end = endDate.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'});
+          return `<div style="font-size:0.65rem;color:var(--muted2);margin-top:2px;">Ciclo: ${start} → ${end}</div>`;
+        })()}
+       </div>
       <div class="cred-status" style="color:var(${meta.color});background:rgba(${meta.colorRaw},0.08);border-color:rgba(${meta.colorRaw},0.2);">ATIVO</div>
      </div>`;
      
@@ -561,19 +575,22 @@ async function loadProducts(client){
        // VEO3 SHARED — credenciais do Google Flow
        const veoEmail = c.veo3_email || '';
        const veoPass  = c.veo3_password || '';
+       // Force cache-bust on currentClient re-read
+       const _veoSafe = veoEmail || (currentClient?.veo3_email) || '';
+       const _veoPassSafe = veoPass || (currentClient?.veo3_password) || '';
        html += `
        <div class="cred-fields">
          <div class="cred-field full">
            <div class="cred-field-label">Email da conta Google (Flow)</div>
            <div class="cred-field-row">
-             <div class="cred-val" id="veo3-email-val">${veoEmail || '—'}</div>
-             ${veoEmail ? `<button class="btn-reveal" style="margin-left:8px;padding:0 10px;font-size:0.75rem;" onclick="navigator.clipboard.writeText('${veoEmail}');showToast('Email copiado!')">Copiar</button>` : ''}
+             <div class="cred-val" id="veo3-email-val">${_veoSafe || '—'}</div>
+             ${_veoSafe ? `<button class="btn-reveal" style="margin-left:8px;padding:0 10px;font-size:0.75rem;" onclick="navigator.clipboard.writeText('${_veoSafe}');showToast('Email copiado!')">Copiar</button>` : ''}
            </div>
          </div>
          <div class="cred-field full">
            <div class="cred-field-label">Senha da conta Google (Flow)</div>
            <div class="cred-field-row">
-             <div class="cred-val"><span class="dots-anim" id="veo3-dots">• • • • • • • •</span><span id="veo3-pass-val" style="display:none;">${veoPass}</span></div>
+             <div class="cred-val"><span class="dots-anim" id="veo3-dots">• • • • • • • •</span><span id="veo3-pass-val" style="display:none;">${_veoPassSafe}</span></div>
              <div class="field-actions">
                <button class="btn-reveal" id="veo3-reveal-btn" onclick="
                  document.getElementById('veo3-pass-val').style.display='inline';

@@ -657,6 +657,65 @@ async function loadProducts(client){
     for (let pid of prods) {
     const meta = PRODUCT_CATALOG[pid] || { name: "Acesso Liberado", icon: "💎", color: "--green", colorRaw: "16,185,129" };
     
+    // Compute billing cycle data BEFORE building card HTML
+    const _lpRaw = c?.last_payment ? new Date(c.last_payment) : null;
+    const _dd = c?.due_day || (_lpRaw ? _lpRaw.getDate() : 25);
+    let _cycleBar = '';
+    if (_lpRaw) {
+      const _endDate = new Date(_lpRaw);
+      _endDate.setMonth(_endDate.getMonth() + 1);
+      _endDate.setDate(_dd);
+      const _now = new Date();
+      const _totalMs = _endDate - _lpRaw;
+      const _pct = Math.max(0, Math.min(100, ((_now - _lpRaw) / _totalMs) * 100));
+      const _daysLeft = Math.max(0, Math.ceil((_endDate - _now) / 86400000));
+      const _expired = _now > _endDate;
+      const _startStr = _lpRaw.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+      const _endStr   = _endDate.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+      const _startLbl = _lpRaw.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).toUpperCase();
+      const _endLbl   = _endDate.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).toUpperCase();
+      const _r = 27, _circ = 2*Math.PI*_r;
+      const _offs = _expired ? 0 : (_circ*(1-_pct/100)).toFixed(1);
+      _cycleBar = `
+      <svg width="0" height="0" style="position:absolute"><defs>
+        <linearGradient id="cycleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#10B981"/>
+          <stop offset="100%" stop-color="#8B5CF6"/>
+        </linearGradient>
+      </defs></svg>
+      <div class="cycle-card">
+        <div class="cycle-dates-col">
+          <div class="cycle-range">
+            <span>${_startStr}</span>
+            <span class="cycle-range-arrow">→</span>
+            <span>${_endStr}</span>
+          </div>
+          <div class="cycle-track-row">
+            <span class="cycle-track-label">${_startLbl}</span>
+            <div class="cycle-track">
+              <div class="cycle-fill ${_expired?'expired-fill':''}" style="width:${_expired?100:_pct}%">
+                <div class="cycle-ball ${_expired?'expired':''}"></div>
+              </div>
+            </div>
+            <span class="cycle-track-label">${_endLbl}</span>
+          </div>
+        </div>
+        <div class="cycle-ring-col">
+          <div class="cycle-ring-wrap">
+            <svg viewBox="0 0 64 64" width="64" height="64">
+              <circle class="cycle-ring-bg" cx="32" cy="32" r="${_r}"/>
+              <circle class="cycle-ring-arc ${_expired?'expired':''}" cx="32" cy="32" r="${_r}"
+                stroke-dasharray="${_circ.toFixed(1)}" stroke-dashoffset="${_offs}"/>
+            </svg>
+            <div class="cycle-ring-number">
+              <span class="cycle-ring-num ${_expired?'expired':''}">${_expired?'⛔':_daysLeft}</span>
+              <span class="cycle-ring-label">${_expired?'vencido':'dias rest.'}</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
     html += `
     <div class="card cred-card" style="margin-bottom:0;">
     `;

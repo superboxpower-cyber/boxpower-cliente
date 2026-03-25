@@ -558,17 +558,44 @@ async function loadProducts(client){
         </div>
        </div>`;
      } else if (pid === '01ccb898-f88f-4bd3-8bd9-33650abf961c') {
-       // VEO3 SHARED — link direto para o Flow
+       // VEO3 SHARED — credenciais do Google Flow
+       const veoEmail = c.veo3_email || '';
+       const veoPass  = c.veo3_password || '';
        html += `
        <div class="cred-fields">
-         <div class="cred-field full" style="text-align:center;padding:24px;">
-           <div style="font-size:0.85rem;color:var(--muted2);margin-bottom:8px;">Acesse o gerador de vídeos com IA diretamente:</div>
-           <div style="font-size:0.75rem;color:var(--muted);margin-bottom:16px;">Use sempre em aba anônima • Modelo: <strong>Veo 3.1 – Fast [Lower Priority]</strong></div>
+         <div class="cred-field full">
+           <div class="cred-field-label">Email da conta Google (Flow)</div>
+           <div class="cred-field-row">
+             <div class="cred-val" id="veo3-email-val">${veoEmail || '—'}</div>
+             ${veoEmail ? `<button class="btn-reveal" style="margin-left:8px;padding:0 10px;font-size:0.75rem;" onclick="navigator.clipboard.writeText('${veoEmail}');showToast('Email copiado!')">Copiar</button>` : ''}
+           </div>
+         </div>
+         <div class="cred-field full">
+           <div class="cred-field-label">Senha da conta Google (Flow)</div>
+           <div class="cred-field-row">
+             <div class="cred-val"><span class="dots-anim" id="veo3-dots">• • • • • • • •</span><span id="veo3-pass-val" style="display:none;">${veoPass}</span></div>
+             <div class="field-actions">
+               <button class="btn-reveal" id="veo3-reveal-btn" onclick="
+                 document.getElementById('veo3-pass-val').style.display='inline';
+                 document.getElementById('veo3-dots').style.display='none';
+                 this.style.display='none';
+                 setTimeout(()=>{
+                   document.getElementById('veo3-pass-val').style.display='none';
+                   document.getElementById('veo3-dots').style.display='inline';
+                   this.style.display='inline-flex';
+                 },15000);
+               "><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Liberar</button>
+             </div>
+           </div>
+         </div>
+         <div class="cred-field full" style="text-align:center;padding-top:4px;">
+           <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">Use sempre em aba anônima • Modelo: <strong>Veo 3.1 – Fast [Lower Priority]</strong></div>
            <a href="https://labs.google/fx/pt/tools/flow" target="_blank" rel="noopener">
-             <button class="btn-login" style="width:auto;padding:0 30px;height:40px;font-size:0.85rem;">🚀 Acessar VEO3 Flow</button>
+             <button class="btn-login" style="width:auto;padding:0 24px;height:36px;font-size:0.82rem;">🚀 Ir para o Flow</button>
            </a>
          </div>
        </div>`;
+
      } else if (pid === '8024dd7f-6df3-4eb7-9567-42c7198be3b7') {
        // CAPCUT PRO
        html += `

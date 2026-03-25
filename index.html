@@ -557,15 +557,64 @@ async function loadProducts(client){
          </div>
         </div>
        </div>`;
-     } else {
-       // GENERIC PRODUCT FIELDS
+     } else if (pid === '01ccb898-f88f-4bd3-8bd9-33650abf961c') {
+       // VEO3 SHARED — link direto para o Flow
        html += `
        <div class="cred-fields">
          <div class="cred-field full" style="text-align:center;padding:24px;">
-           <div style="font-size:0.85rem;color:var(--muted2);margin-bottom:12px;">Seu link de acesso está validado e pronto.</div>
-           <button class="btn-login" onclick="openPopup({title:'Acesso Remoto', message:'Me chame no WhatsApp e peça o seu Link de Acesso Exclusivo!'})" style="width:auto;padding:0 30px;height:40px;font-size:0.85rem;">Ver Acesso</button>
+           <div style="font-size:0.85rem;color:var(--muted2);margin-bottom:8px;">Acesse o gerador de vídeos com IA diretamente:</div>
+           <div style="font-size:0.75rem;color:var(--muted);margin-bottom:16px;">Use sempre em aba anônima • Modelo: <strong>Veo 3.1 – Fast [Lower Priority]</strong></div>
+           <a href="https://labs.google/fx/pt/tools/flow" target="_blank" rel="noopener">
+             <button class="btn-login" style="width:auto;padding:0 30px;height:40px;font-size:0.85rem;">🚀 Acessar VEO3 Flow</button>
+           </a>
          </div>
        </div>`;
+     } else if (pid === '8024dd7f-6df3-4eb7-9567-42c7198be3b7') {
+       // CAPCUT PRO
+       html += `
+       <div class="cred-fields">
+         <div class="cred-field full" style="text-align:center;padding:24px;">
+           <div style="font-size:0.85rem;color:var(--muted2);margin-bottom:16px;">Acesse o CapCut Pro com sua conta vinculada:</div>
+           <a href="https://www.capcut.com/" target="_blank" rel="noopener">
+             <button class="btn-login" style="width:auto;padding:0 30px;height:40px;font-size:0.85rem;">✂️ Acessar CapCut Pro</button>
+           </a>
+         </div>
+       </div>`;
+     } else if (pid === '943561ec-5e7c-4b7a-813e-b389eea7590f') {
+       // CHATGPT PREMIUM
+       html += `
+       <div class="cred-fields">
+         <div class="cred-field full" style="text-align:center;padding:24px;">
+           <div style="font-size:0.85rem;color:var(--muted2);margin-bottom:16px;">Acesse o ChatGPT Premium:</div>
+           <a href="https://chat.openai.com/" target="_blank" rel="noopener">
+             <button class="btn-login" style="width:auto;padding:0 30px;height:40px;font-size:0.85rem;">🤖 Acessar ChatGPT</button>
+           </a>
+         </div>
+       </div>`;
+     } else if (pid === '783f332d-1213-4c14-b1ca-26f06577c898') {
+       // GOOGLE VEO ULTRA
+       html += `
+       <div class="cred-fields">
+         <div class="cred-field full" style="text-align:center;padding:24px;">
+           <div style="font-size:0.85rem;color:var(--muted2);margin-bottom:8px;">Acesso à conta Ultra da Google:</div>
+           <div style="font-size:0.75rem;color:var(--muted);margin-bottom:16px;">Use sempre em aba anônima • Modelo: <strong>Veo 3.1 – Fast [Lower Priority]</strong></div>
+           <a href="https://labs.google/fx/pt/tools/flow" target="_blank" rel="noopener">
+             <button class="btn-login" style="width:auto;padding:0 30px;height:40px;font-size:0.85rem;">🚀 Acessar Google Ultra</button>
+           </a>
+         </div>
+       </div>`;
+     } else {
+       // PRODUTO GENÉRICO — exibe link de suporte
+       html += `
+       <div class="cred-fields">
+         <div class="cred-field full" style="text-align:center;padding:24px;">
+           <div style="font-size:0.85rem;color:var(--muted2);margin-bottom:12px;">Seu acesso está disponível. Fale com o suporte para receber o link exclusivo.</div>
+           <a href="https://wa.me/5519973622651" target="_blank" rel="noopener">
+             <button class="btn-login" style="width:auto;padding:0 30px;height:40px;font-size:0.85rem;">💬 Falar com Suporte</button>
+           </a>
+         </div>
+       </div>`;
+
      }
      
     html += `</div>`;

@@ -646,15 +646,13 @@ async function loadProducts(client){
            <div class="cred-field-row">
              <div class="cred-val"><span class="dots-anim" id="veo3-dots">• • • • • • • •</span><span id="veo3-pass-val" style="display:none;">${_veoPassSafe}</span></div>
              <div class="field-actions">
+               <button class="btn-reveal" id="veo3-copy-pass" style="display:none;" onclick="navigator.clipboard.writeText(document.getElementById('veo3-pass-val').textContent.trim());showToast('Senha copiada!')">Copiar</button>
                <button class="btn-reveal" id="veo3-reveal-btn" onclick="
-                 document.getElementById('veo3-pass-val').style.display='inline';
-                 document.getElementById('veo3-dots').style.display='none';
-                 this.style.display='none';
-                 setTimeout(()=>{
-                   document.getElementById('veo3-pass-val').style.display='none';
-                   document.getElementById('veo3-dots').style.display='inline';
-                   this.style.display='inline-flex';
-                 },15000);
+                 const pv=document.getElementById('veo3-pass-val');
+                 const dt=document.getElementById('veo3-dots');
+                 const cp=document.getElementById('veo3-copy-pass');
+                 pv.style.display='inline';dt.style.display='none';this.style.display='none';if(cp)cp.style.display='inline-flex';
+                 setTimeout(()=>{pv.style.display='none';dt.style.display='inline';this.style.display='inline-flex';if(cp)cp.style.display='none';},15000);
                "><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Liberar</button>
              </div>
            </div>

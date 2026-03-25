@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BoxPower Hub · Portal do Cliente</title>
+<title>Portal Hub · Central do Assinante</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -250,8 +250,8 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 <div id="loginScreen">
  <div class="login-box">
   <div class="login-logo"><img src="https://i.ibb.co/6JP034RZ/Whats-App-Image-2026-01-30-at-18-18-51.jpg" alt="BoxPower"></div>
-  <div class="login-title">BoxPower</div>
-  <div class="login-sub">Portal exclusivo de clientes BoxPower</div>
+  <div class="login-title">Hub Central</div>
+  <div class="login-sub">Sua Central VIP de Produtos</div>
   <div class="field-wrap">
    <div class="field-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
    <input type="email" id="loginEmail" placeholder="seu@email.com" autocomplete="email">
@@ -280,7 +280,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
   <div class="sidebar-logo">
    <div class="logo-img"><img src="https://i.ibb.co/6JP034RZ/Whats-App-Image-2026-01-30-at-18-18-51.jpg" alt="BP"></div>
    <div class="logo-text">
-    <div class="logo-brand">BoxPower</div>
+    <div class="logo-brand">Hub Central</div>
     <div class="logo-sub">Portal Ativo</div>
    </div>
   </div>
@@ -295,17 +295,13 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
   </div>
   <!-- NAV -->
   <nav class="sidebar-nav">
-   <a class="nav-item active" id="nav-ciclo" onclick="showSection('ciclo')">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    <span class="nav-label">Ciclo Atual</span>
-   </a>
-   <a class="nav-item" id="nav-credenciais" onclick="showSection('credenciais')">
-    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    <span class="nav-label">Credenciais AdsPower</span>
+   <a class="nav-item active" id="nav-produtos" onclick="showSection('produtos')">
+    <svg viewBox="0 0 24 24"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z"/><polyline points="14 2 14 8 20 8"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+    <span class="nav-label">Meus Produtos</span>
    </a>
    <a class="nav-item" id="nav-mensalidades" onclick="showSection('mensalidades')">
     <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-    <span class="nav-label">Mensalidades</span>
+    <span class="nav-label">Faturas</span>
     <span class="nav-badge" id="pendingBadge" style="display:none;">!</span>
    </a>
    <a class="nav-item" id="nav-mensagens" onclick="showSection('mensagens')">
@@ -348,84 +344,18 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
    </div>
   </div>
 
-  <!-- SECTION: CICLO -->
-  <div class="section active" id="section-ciclo">
+    <!-- SECTION: PRODUTOS -->
+  <div class="section active" id="section-produtos">
    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-    <div class="section-title">Ciclo Atual</div>
+    <div class="section-title">Minhas Assinaturas</div>
     <div style="display:flex;gap:8px;">
      <button class="hbtn" id="refreshBtn" onclick="refreshPortal()" title="Atualizar"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
      <button class="hbtn" style="color:var(--red);border-color:rgba(239,68,68,0.2);" onclick="doLogout()" title="Sair"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
     </div>
    </div>
-   <div class="section-sub">Controle do seu período de acesso BoxPower</div>
-   <!-- CYCLE CARD -->
-   <div class="card cycle-card" style="margin-bottom:20px;">
-    <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient></defs></svg>
-    <div class="cycle-top">
-     <div>
-      <div class="cycle-label">📅 Período de acesso</div>
-      <div class="cycle-dates"><span id="cycleStart">—</span><span class="cycle-arrow">→</span><span id="cycleEnd">—</span></div>
-     </div>
-     <div class="gauge-wrap">
-      <div class="gauge">
-       <svg viewBox="0 0 90 90"><circle class="gauge-track" cx="45" cy="45" r="37"/><circle class="gauge-fill" id="gaugeFill" cx="45" cy="45" r="37"/></svg>
-       <div class="gauge-num" id="gaugeDays">—</div>
-      </div>
-      <div class="gauge-lbl">dias rest.</div>
-     </div>
-    </div>
-    <div style="position:relative;">
-     <div class="progress-labels"><span id="progressStart">—</span><span id="progressEnd">—</span></div>
-     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-    </div>
-   </div>
-   <!-- STAT CHIPS -->
-   <div class="grid-3">
-    <div class="stat-chip"><div class="stat-chip-icon">📦</div><div class="stat-chip-val" id="statPlan">BoxPower</div><div class="stat-chip-lbl">Produto</div></div>
-    <div class="stat-chip"><div class="stat-chip-icon">✅</div><div class="stat-chip-val" id="statStatus">—</div><div class="stat-chip-lbl">Status</div></div>
-    <div class="stat-chip"><div class="stat-chip-icon">📆</div><div class="stat-chip-val" id="statDue">—</div><div class="stat-chip-lbl">Vencimento</div></div>
-   </div>
-  </div>
-
-  <!-- SECTION: CREDENCIAIS -->
-  <div class="section" id="section-credenciais">
-   <div class="section-title">Credenciais AdsPower</div>
-   <div class="section-sub">Acesse seu perfil de navegação anti-detecção</div>
-   <div class="card cred-card">
-    <div class="cred-header">
-     <div class="cred-icon">🔐</div>
-     <div><div class="cred-title">Acesso AdsPower</div><div class="cred-subtitle">Perfil de navegação exclusivo</div></div>
-     <div class="cred-status" id="credStatus">Ativo</div>
-    </div>
-    <div class="cred-fields">
-     <!-- PROFILE ID -->
-     <div class="cred-field">
-      <div class="cred-field-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Email do ADSPOWER</div>
-      <div class="cred-field-row">
-       <div class="cred-val" id="ads-profile-id">—</div>
-       <div class="field-actions">
-        <button class="ibtn" onclick="copyText('ads-profile-id','ID copiado!')"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-       </div>
-      </div>
-     </div>
-     <!-- SENHA -->
-     <div class="cred-field">
-      <div class="cred-field-label"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Senha do ADSPOWER</div>
-      <div class="cred-field-row">
-       <div class="cred-val"><span class="dots-anim" id="dots-view">• • • • • • • • •</span><span id="pass-val" style="display:none;"></span></div>
-       <div class="field-actions">
-        <span class="reveal-timer" id="timer-lbl"></span>
-        <button class="ibtn" id="copy-pass" onclick="copyText('pass-val','Senha copiada!')" style="display:none;"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-        <button class="btn-reveal" id="reveal-btn" onclick="revealPassword()"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Liberar (15s)</button>
-       </div>
-      </div>
-     </div>
-     <!-- INSTRUCOES -->
-     <div class="cred-field full" style="background:rgba(16,185,129,0.04);border-color:rgba(16,185,129,0.15);">
-      <div class="cred-field-label">💡 Como usar</div>
-      <div style="font-size:0.82rem;color:var(--muted2);line-height:1.7;">1. Faça o download do AdsPower: <a href="https://www.adspower.com/pt/" target="_blank" style="color:var(--green);font-weight:600;">adspower.com/pt</a><br><span style="font-size:0.75rem;color:var(--muted);">⚠️ Não faça login na versão web — precisa baixar o app.</span><br><br>2. Clique em "Liberar" para ver a senha (expira em 15s)<br><br>3. Faça login no AdsPower com os dados acima<br><br>4. Use as credenciais para acessar seu perfil exclusivo</div>
-     </div>
-    </div>
+   <div class="section-sub">Escolha a plataforma que deseja acessar abaixo</div>
+   <div class="grid-2" id="productsGrid">
+      <!-- Injected by JS -->
    </div>
   </div>
 
@@ -526,7 +456,7 @@ async function login(){
  if(!/^[0-9]{6}$/.test(pin)){msgEl.textContent='PIN deve ter 6 dígitos numéricos.';msgEl.className='err';return;}
  msgEl.textContent='Verificando acesso...';
 
- const{data:result,error}=await sbPublic.rpc('validate_bp_pin',{p_email:email,p_pin:pin});
+ const{data:result,error}=await sbPublic.rpc('validate_portal_login',{p_email:email,p_pin:pin});
  if(error||!result){msgEl.textContent='Erro ao verificar acesso.';msgEl.className='err';return;}
  if(result.error){
   const errs={'invalid_credentials':'PIN ou e-mail incorretos.','portal_exclusivo_boxpower':'Portal exclusivo BoxPower.'};
@@ -551,7 +481,7 @@ async function enterPortal(client){
  setEl('sideUserEmail',client.email||'');
  document.getElementById('loginScreen').style.display='none';
  showToast('Bem-vindo, '+nomeF+'!');
- await Promise.all([loadCycle(client),loadPayments(client),loadMessages(),loadPopup()]);
+ await Promise.all([loadProducts(client),loadPayments(client),loadMessages(),loadPopup()]);
 }
 
 /* ── LOGOUT ── */
@@ -565,7 +495,88 @@ async function doLogout(){
  showToast('Até logo!');
 }
 
-/* ── CICLO ── */
+
+const PRODUCT_CATALOG = {
+  "1c13544a-1435-4071-a10a-566e80cad327": { name: "BoxPower", icon: "📦", color: "--violet", colorRaw: "139,92,246" },
+  "01ccb898-f88f-4bd3-8bd9-33650abf961c": { name: "VEO3 Shared", icon: "🎬", color: "--green", colorRaw: "16,185,129" },
+  "8024dd7f-6df3-4eb7-9567-42c7198be3b7": { name: "CapCut Pro", icon: "✂️", color: "--cyan", colorRaw: "6,182,212" },
+  "943561ec-5e7c-4b7a-813e-b389eea7590f": { name: "ChatGPT Premium", icon: "🤖", color: "--blue", colorRaw: "79,142,247" },
+  "783f332d-1213-4c14-b1ca-26f06577c898": { name: "Google VEO Ultra", icon: "🚀", color: "--amber", colorRaw: "245,158,11" },
+  "126dd98c-5edb-4d4c-8a30-4142f5bfd016": { name: "Canva PRO", icon: "🎨", color: "--blue", colorRaw: "79,142,247" },
+  "ac2d1bc9-d97b-4003-aaba-bfab9cadbd7f": { name: "ReelShort", icon: "📱", color: "--red", colorRaw: "239,68,68" }
+};
+
+async function loadProducts(client){
+  const grid = document.getElementById('productsGrid');
+  grid.innerHTML = '';
+  const prods = client.products ? client.products.filter(x => x) : [];
+  
+  if (prods.length === 0) {
+    grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 20px;">Nenhuma assinatura ativa encontrada.</div>';
+    return;
+  }
+  
+  let html = '';
+  for (let pid of prods) {
+    const meta = PRODUCT_CATALOG[pid] || { name: "Acesso Liberado", icon: "💎", color: "--green", colorRaw: "16,185,129" };
+    
+    html += `
+    <div class="card cred-card" style="margin-bottom:0;">
+     <div class="cred-header">
+      <div class="cred-icon" style="background:linear-gradient(135deg,rgba(${meta.colorRaw},0.2),rgba(${meta.colorRaw},0.05));border-color:rgba(${meta.colorRaw},0.3);">${meta.icon}</div>
+      <div><div class="cred-title">${meta.name}</div><div class="cred-subtitle">Produto Ativo</div></div>
+      <div class="cred-status" style="color:var(${meta.color});background:rgba(${meta.colorRaw},0.08);border-color:rgba(${meta.colorRaw},0.2);">ATIVO</div>
+     </div>`;
+     
+     if (pid === '1c13544a-1435-4071-a10a-566e80cad327') {
+       // BOXPOWER SPECIFIC ADSPOWER FIELDS
+       html += `
+       <div class="cred-fields">
+        <div class="cred-field full">
+         <div class="cred-field-label">Email do ADSPOWER</div>
+         <div class="cred-field-row">
+          <div class="cred-val" id="ads-profile-id">${client.adspower_login||''}</div>
+         </div>
+        </div>
+        <div class="cred-field full">
+         <div class="cred-field-label">Senha do ADSPOWER</div>
+         <div class="cred-field-row">
+          <div class="cred-val"><span class="dots-anim" id="dots-view">• • • • • • • • •</span><span id="pass-val" style="display:none;">${client.adspower_password||''}</span></div>
+          <div class="field-actions">
+           <span class="reveal-timer" id="timer-lbl"></span>
+           <button class="btn-reveal" id="reveal-btn" onclick="revealPassword()"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Liberar</button>
+          </div>
+         </div>
+        </div>
+       </div>`;
+     } else {
+       // GENERIC PRODUCT FIELDS
+       html += `
+       <div class="cred-fields">
+         <div class="cred-field full" style="text-align:center;padding:24px;">
+           <div style="font-size:0.85rem;color:var(--muted2);margin-bottom:12px;">Seu link de acesso está validado e pronto.</div>
+           <button class="btn-login" onclick="openPopup({title:'Acesso Remoto', message:'Me chame no WhatsApp e peça o seu Link de Acesso Exclusivo!'})" style="width:auto;padding:0 30px;height:40px;font-size:0.85rem;">Ver Acesso</button>
+         </div>
+       </div>`;
+     }
+     
+    html += `</div>`;
+  }
+  
+  // Upsell Card
+  html += `
+    <div class="card cred-card" style="margin-bottom:0; border: 1px dashed rgba(255,255,255,0.15); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding: 40px 20px;">
+      <div style="font-size: 2rem; margin-bottom: 12px; filter: grayscale(1) opacity(0.5);">🛒</div>
+      <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">Adicionar Ferramentas</div>
+      <div style="font-size: 0.8rem; color: var(--muted); margin-bottom: 20px; max-width: 250px;">Potencialize seus resultados com novas assinaturas ilimitadas.</div>
+      <button class="hbtn" style="width: auto; padding: 0 20px; font-size: 0.8rem; font-weight: 600;" onclick="window.open('https://wa.me/55819736M2551')">Explorar Opções</button>
+    </div>
+  `;
+  
+  grid.innerHTML = html;
+}
+
+/* ── LEGACY DELETED ── */
 function resetCycleUI(){
  setEl('cycleStart','—');setEl('cycleEnd','—');setEl('gaugeDays','—');
  setEl('progressStart','—');setEl('progressEnd','—');setEl('statStatus','—');setEl('statDue','—');
@@ -585,7 +596,7 @@ function setCredentialState(active){
  }
 }
 
-async function loadCycle(client){
+async function loadProducts(client){
  try{
   resetCycleUI();setCredentialState(false);
   const c=client||currentClient;if(!c)return;
@@ -718,7 +729,7 @@ async function revealPassword(){
    toast('Faça login novamente.','warn');
    return;
   }
-  const { data, error } = await sbPublic.rpc('validate_bp_pin', {
+  const { data, error } = await sbPublic.rpc('validate_portal_login', {
    p_email: currentClient.email,
    p_pin: currentPin
   });
@@ -760,7 +771,7 @@ async function revealPassword(){
 /* ── REFRESH ── */
 async function refreshPortal(){
  ['refreshBtn','refreshBtnMobile'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.add('spin');});
- await Promise.all([loadCycle(),loadPayments(),loadMessages()]);
+ await Promise.all([loadProducts(),loadPayments(),loadMessages()]);
  setTimeout(()=>{['refreshBtn','refreshBtnMobile'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('spin');});showToast('Portal atualizado!');},700);
 }
 
@@ -783,7 +794,7 @@ function setEl(id,val){const el=document.getElementById(id);if(el)el.textContent
   if(saved){
    const{e,p}=JSON.parse(saved);
    if(e&&p&&/^\d{6}$/.test(p)){
-    const{data:result,error}=await sbPublic.rpc('validate_bp_pin',{p_email:e,p_pin:p});
+    const{data:result,error}=await sbPublic.rpc('validate_portal_login',{p_email:e,p_pin:p});
     if(!error&&result&&!result.error){
      currentClient=result;
      currentPin=p;

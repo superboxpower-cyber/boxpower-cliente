@@ -244,8 +244,9 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 
 /* ── CYCLE CARD ── */
 .cycle-card {
-  margin: 0 2px;
+  margin: 0;
   padding: 16px 20px 14px;
+  border-radius: 0;  /* inside card, no extra radius */
   background: rgba(255,255,255,0.025);
   border-bottom: 1px solid rgba(255,255,255,0.06);
   display: flex;
@@ -658,7 +659,9 @@ async function loadProducts(client){
     
     html += `
     <div class="card cred-card" style="margin-bottom:0;">
-     <div class="cred-header">
+    `;
+    html += _cycleBar;
+    html += `<div class="cred-header">
       <div class="cred-icon" style="background:linear-gradient(135deg,rgba(${meta.colorRaw},0.2),rgba(${meta.colorRaw},0.05));border-color:rgba(${meta.colorRaw},0.3);">${meta.icon}</div>
              <div>
         <div class="cred-title">${meta.name}</div>
@@ -834,7 +837,7 @@ async function loadProducts(client){
         </div>
       </div>`;
     }
-    html += `</div>${_cycleBar}`;
+    html += `</div>`;
     }
   } // fechar o else
   

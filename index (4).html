@@ -433,15 +433,26 @@
 
         async function restartCycle() {
             const cid = document.getElementById('modal-client-id').value; if (!cid) return;
-            let pid = null; if (currentUserConfig.role === 'restricted') { pid = getAllowedProductId(); } else { pid = document.getElementById('modal-product').value || null; }
-            if (!pid) return alert("Selecione um produto para reiniciar o ciclo (slot 1).");
-            if (!confirm("Reiniciar ciclo deste produto? Isso fará as pendências considerarem o retorno como novo início.")) return;
+            let pids = [];
+            if (currentUserConfig.role === 'restricted') { 
+                const allowed = getAllowedProductId();
+                if(allowed) pids.push(allowed);
+            } else { 
+                for(let slot=1; slot<=4; slot++) {
+                    const selId = slot === 1 ? 'modal-product' : `modal-product-${slot}`;
+                    const el = document.getElementById(selId);
+                    if(el && el.value && el.parentElement && !el.parentElement.classList.contains('hidden')) pids.push(el.value);
+                }
+            }
+            if (pids.length === 0) return alert("Nenhum produto selecionado para reiniciar o ciclo.");
+            if (!confirm(`Reiniciar ciclo de ${pids.length} produto(s)? Isso fará as pendências considerarem o retorno como novo início.`)) return;
             
             const dt = new Date().toISOString().slice(0,10) + 'T12:00:00Z';
             const refM = new Date().toISOString().slice(0,7);
             
-            await sb.from('payment_history').insert([{ client_id: cid, product_id: pid, amount: 0, payment_date: dt, reference_month: refM, status: 'approved', method: 'restart' }]);
-            await fetchFullHistory(); renderHistoryList(cid); calculateDashboard(); alert("Ciclo reiniciado.");
+            const inserts = pids.map(pid => ({ client_id: cid, product_id: pid, amount: 0, payment_date: dt, reference_month: refM, status: 'approved', method: 'restart' }));
+            await sb.from('payment_history').insert(inserts);
+            await fetchFullHistory(); renderHistoryList(cid); calculateDashboard(); alert("Ciclo reiniciado com sucesso.");
         }
 
         async function saveHistory(){
@@ -453,7 +464,7 @@
                   pid=document.getElementById('hist-product').value||null,
                   amount=parseMoneyBR(rawVal);
             
-            if(!amount||!date||!refMonth) return alert("Preencha Data, Mês Referência e Valor");
+            if(isNaN(amount) || !date || !refMonth) return alert("Preencha Data, Mês Referência e Valor");
             
             const payload={
                 client_id:cid,
@@ -461,12 +472,15 @@
                 payment_date:date+'T12:00:00Z',
                 reference_month: refMonth,
                 status:'approved',
-                method:'manual',
                 product_id:pid
             };
             
-            if(hid) await sb.from('payment_history').update(payload).eq('id',hid);
-            else await sb.from('payment_history').insert([payload]);
+            if(hid) {
+                await sb.from('payment_history').update(payload).eq('id',hid);
+            } else {
+                payload.method = 'manual';
+                await sb.from('payment_history').insert([payload]);
+            }
             
             closeHistoryForm();
             await fetchFullHistory();
@@ -517,7 +531,7 @@
         
         // MUDANÇA AQUI: Salvar o email no banco
         async function saveClient() { const id = document.getElementById('modal-client-id').value; const name = document.getElementById('modal-name').value; const email = document.getElementById('modal-email').value; const wpp = document.getElementById('modal-whatsapp').value; const active = document.getElementById('modal-status').value === 'true'; let p1, p2, p3, p4; if (currentUserConfig.role === 'restricted') { const allowedPid = getAllowedProductId(); const prod = allProducts.find(p => p.id === allowedPid); const due = parseInt(document.getElementById('modal-due').value)||10; p1 = { pid: allowedPid, price: prod ? prod.price : 0, due: due }; p2 = { pid: null, price: null, due: null }; p3 = { pid: null, price: null, due: null }; p4 = { pid: null, price: null, due: null }; } else { const getP = (n) => { if(n > 1 && document.getElementById(`row-prod-${n}`).classList.contains('hidden')) return {d:null,p:null,pr:null}; const d=parseInt(document.getElementById(`modal-due${n>1?'-'+n:''}`).value)||null; const pid = document.getElementById(n===1 ? 'modal-product' : `modal-product-${n}`).value || null; const price = parseMoneyBR(document.getElementById(n===1 ? 'modal-price' : `modal-price-${n}`).value); return { d:d, pid:pid, price:price }; }; p1 = getP(1); p2 = getP(2); p3 = getP(3); p4 = getP(4); } const d = { name, email, whatsapp: wpp, active, due_day: p1.d, product_id: p1.pid, agreed_price: p1.price, due_day_2: p2.d, product_id_2: p2.pid, agreed_price_2: p2.price, due_day_3: p3.d, product_id_3: p3.pid, agreed_price_3: p3.price, due_day_4: p4.d, product_id_4: p4.pid, agreed_price_4: p4.price }; if(id) await sb.from('clients').update(d).eq('id', id); else { const {data} = await sb.from('clients').insert([d]).select(); if(data && data[0]){ const newId = data[0].id; const dt = new Date().toISOString().slice(0,10) + 'T12:00:00Z'; const refM = new Date().toISOString().slice(0,7); const pays = []; if(p1.pid && p1.price) pays.push({client_id:newId, product_id:p1.pid, amount:p1.price, payment_date:dt, reference_month:refM, status:'approved', method:'auto_reg'}); if(p2.pid && p2.price) pays.push({client_id:newId, product_id:p2.pid, amount:p2.price, payment_date:dt, reference_month:refM, status:'approved', method:'auto_reg'}); if(p3.pid && p3.price) pays.push({client_id:newId, product_id:p3.pid, amount:p3.price, payment_date:dt, reference_month:refM, status:'approved', method:'auto_reg'}); if(p4.pid && p4.price) pays.push({client_id:newId, product_id:p4.pid, amount:p4.price, payment_date:dt, reference_month:refM, status:'approved', method:'auto_reg'}); if(pays.length>0) await sb.from('payment_history').insert(pays); } } closeModal(); loadAllData(); }
-        async function deleteClient(id, name) { if(confirm(`Excluir ${name}?`)) { await sb.from('payment_history').delete().eq('client_id', id); await sb.from('clients').delete().eq('id', id); loadAllData(); } }
+        async function deleteClient(id, name) { if(confirm(`Excluir ${name}?`)) { await sb.from('payment_history').delete().eq('client_id', id); await sb.from('payments').delete().eq('client_id', id); await sb.from('portal_users').delete().eq('client_id', id); await sb.from('credential_reset_members').delete().eq('client_id', id); await sb.from('veo3_subscriptions').delete().eq('client_id', id); await sb.from('client_risk_events').delete().eq('client_id', id); await sb.from('clients').delete().eq('id', id); loadAllData(); } }
         
         let debounceTimer;
         function debouncedFilterClients() { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => { filterClients(); }, 150); }

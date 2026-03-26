@@ -109,8 +109,8 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-
 .cred-field.full{grid-column:1/-1;}
 .cred-field-label{font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600;display:flex;align-items:center;gap:5px;}
 .cred-field-label svg{width:10px;height:10px;stroke:var(--muted);fill:none;stroke-width:2.5;}
-.cred-field-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
-.cred-val{font-family:'DM Mono',monospace;font-size:0.9rem;font-weight:500;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cred-field-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.cred-val{font-family:'DM Mono',monospace;font-size:0.9rem;font-weight:500;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .dots-anim{letter-spacing:5px;font-size:0.65rem;color:var(--muted);}
 .field-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .ibtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;}
@@ -661,6 +661,7 @@ async function loadProducts(client){
     const _lpRaw = c?.last_payment ? new Date(c.last_payment) : null;
     const _dd = c?.due_day || (_lpRaw ? _lpRaw.getDate() : 25);
     let _cycleBar = '';
+    let isExpired = false;
     if (_lpRaw) {
       const _endDate = new Date(_lpRaw);
       _endDate.setMonth(_endDate.getMonth() + 1);
@@ -670,6 +671,7 @@ async function loadProducts(client){
       const _pct = Math.max(0, Math.min(100, ((_now - _lpRaw) / _totalMs) * 100));
       const _daysLeft = Math.max(0, Math.ceil((_endDate - _now) / 86400000));
       const _expired = _now > _endDate;
+      isExpired = _expired;
       const _startStr = _lpRaw.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
       const _endStr   = _endDate.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
       const _startLbl = _lpRaw.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).toUpperCase();
@@ -732,65 +734,82 @@ async function loadProducts(client){
      
      if (pid === '1c13544a-1435-4071-a10a-566e80cad327') {
        // BOXPOWER SPECIFIC ADSPOWER FIELDS
-       html += `
-       <div class="cred-fields">
-        <div class="cred-field full">
-         <div class="cred-field-label">Email do ADSPOWER</div>
-         <div class="cred-field-row">
-          <div class="cred-val" id="ads-profile-id">${client.adspower_login||''}</div>
-         </div>
-        </div>
-        <div class="cred-field full">
-         <div class="cred-field-label">Senha do ADSPOWER</div>
-         <div class="cred-field-row">
-          <div class="cred-val"><span class="dots-anim" id="dots-view">• • • • • • • • •</span><span id="pass-val" style="display:none;">${client.adspower_password||''}</span></div>
-          <div class="field-actions">
-           <span class="reveal-timer" id="timer-lbl"></span>
-           <button class="btn-reveal" id="reveal-btn" onclick="revealPassword()"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Liberar</button>
+       if (isExpired) {
+         html += `
+         <div class="cred-fields">
+          <div class="cred-field full" style="text-align:center; padding: 20px; color: var(--red); font-weight: 600; border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.05);">
+           ⚠️ Sua assinatura está vencida. Renove para liberar seu acesso às credenciais.
           </div>
-         </div>
-        </div>
-       </div>`;
+         </div>`;
+       } else {
+         html += `
+         <div class="cred-fields">
+          <div class="cred-field full">
+           <div class="cred-field-label">Email do ADSPOWER</div>
+           <div class="cred-field-row">
+            <div class="cred-val" id="ads-profile-id">${client.adspower_login||''}</div>
+           </div>
+          </div>
+          <div class="cred-field full">
+           <div class="cred-field-label">Senha do ADSPOWER</div>
+           <div class="cred-field-row">
+            <div class="cred-val"><span class="dots-anim" id="dots-view">• • • • • • • • •</span><span id="pass-val" style="display:none;">${client.adspower_password||''}</span></div>
+            <div class="field-actions">
+             <span class="reveal-timer" id="timer-lbl"></span>
+             <button class="btn-reveal" id="reveal-btn" onclick="revealPassword()"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Liberar</button>
+            </div>
+           </div>
+          </div>
+         </div>`;
+       }
      } else if (pid === '01ccb898-f88f-4bd3-8bd9-33650abf961c') {
        // VEO3 SHARED — credenciais do Google Flow
-       const veoEmail = c.veo3_email || '';
-       const veoPass  = c.veo3_password || '';
-       // Force cache-bust on currentClient re-read
-       const _veoSafe = veoEmail || (currentClient?.veo3_email) || '';
-       const _veoPassSafe = veoPass || (currentClient?.veo3_password) || '';
-       html += `
-       <div class="cred-fields">
-         <div class="cred-field full">
-           <div class="cred-field-label">Email da conta Google (Flow)</div>
-           <div class="cred-field-row">
-             <div class="cred-val" id="veo3-email-val">${_veoSafe || '—'}</div>
-             ${_veoSafe ? `<button class="btn-reveal" style="margin-left:8px;padding:0 10px;font-size:0.75rem;" onclick="navigator.clipboard.writeText('${_veoSafe}');showToast('Email copiado!')">Copiar</button>` : ''}
-           </div>
-         </div>
-         <div class="cred-field full">
-           <div class="cred-field-label">Senha da conta Google (Flow)</div>
-           <div class="cred-field-row">
-             <div class="cred-val"><span class="dots-anim" id="veo3-dots">• • • • • • • •</span><span id="veo3-pass-val" style="display:none;">${_veoPassSafe}</span></div>
-             <div class="field-actions">
-               <button class="btn-reveal" id="veo3-copy-pass" style="display:none;" onclick="navigator.clipboard.writeText(document.getElementById('veo3-pass-val').textContent.trim());showToast('Senha copiada!')">Copiar</button>
-               <button class="btn-reveal" id="veo3-reveal-btn" onclick="
-                 const pv=document.getElementById('veo3-pass-val');
-                 const dt=document.getElementById('veo3-dots');
-                 const cp=document.getElementById('veo3-copy-pass');
-                 pv.style.display='inline';dt.style.display='none';this.style.display='none';if(cp)cp.style.display='inline-flex';
-                 setTimeout(()=>{pv.style.display='none';dt.style.display='inline';this.style.display='inline-flex';if(cp)cp.style.display='none';},15000);
-               "><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Liberar</button>
+       if (isExpired) {
+         html += `
+         <div class="cred-fields">
+          <div class="cred-field full" style="text-align:center; padding: 20px; color: var(--red); font-weight: 600; border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.05);">
+           ⚠️ Sua assinatura VEO3 está vencida. Renove para liberar seu acesso às credenciais.
+          </div>
+         </div>`;
+       } else {
+         const veoEmail = c.veo3_email || '';
+         const veoPass  = c.veo3_password || '';
+         // Force cache-bust on currentClient re-read
+         const _veoSafe = veoEmail || (currentClient?.veo3_email) || '';
+         const _veoPassSafe = veoPass || (currentClient?.veo3_password) || '';
+         html += `
+         <div class="cred-fields">
+           <div class="cred-field full">
+             <div class="cred-field-label">Email da conta Google (Flow)</div>
+             <div class="cred-field-row">
+               <div class="cred-val" id="veo3-email-val">${_veoSafe || '—'}</div>
+               ${_veoSafe ? `<button class="btn-reveal" style="margin-left:8px;padding:0 10px;font-size:0.75rem;" onclick="navigator.clipboard.writeText('${_veoSafe}');showToast('Email copiado!')">Copiar</button>` : ''}
              </div>
            </div>
-         </div>
-         <div class="cred-field full" style="text-align:center;padding-top:4px;">
-           <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">Use sempre em aba anônima • Modelo: <strong>Veo 3.1 – Fast [Lower Priority]</strong></div>
-           <a href="https://labs.google/fx/pt/tools/flow" target="_blank" rel="noopener">
-             <button class="btn-login" style="width:auto;padding:0 24px;height:36px;font-size:0.82rem;">🚀 Ir para o Flow</button>
-           </a>
-         </div>
-       </div>`;
-
+           <div class="cred-field full">
+             <div class="cred-field-label">Senha da conta Google (Flow)</div>
+             <div class="cred-field-row">
+               <div class="cred-val"><span class="dots-anim" id="veo3-dots">• • • • • • • •</span><span id="veo3-pass-val" style="display:none;">${_veoPassSafe}</span></div>
+               <div class="field-actions">
+                 <button class="btn-reveal" id="veo3-copy-pass" style="display:none;" onclick="navigator.clipboard.writeText(document.getElementById('veo3-pass-val').textContent.trim());showToast('Senha copiada!')">Copiar</button>
+                 <button class="btn-reveal" id="veo3-reveal-btn" onclick="
+                   const pv=document.getElementById('veo3-pass-val');
+                   const dt=document.getElementById('veo3-dots');
+                   const cp=document.getElementById('veo3-copy-pass');
+                   pv.style.display='inline';dt.style.display='none';this.style.display='none';if(cp)cp.style.display='inline-flex';
+                   setTimeout(()=>{pv.style.display='none';dt.style.display='inline';this.style.display='inline-flex';if(cp)cp.style.display='none';},15000);
+                 "><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Liberar</button>
+               </div>
+             </div>
+           </div>
+           <div class="cred-field full" style="text-align:center;padding-top:4px;">
+             <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">Use sempre em aba anônima • Modelo: <strong>Veo 3.1 – Fast [Lower Priority]</strong></div>
+             <a href="https://labs.google/fx/pt/tools/flow" target="_blank" rel="noopener">
+               <button class="btn-login" style="width:auto;padding:0 24px;height:36px;font-size:0.82rem;">🚀 Ir para o Flow</button>
+             </a>
+           </div>
+         </div>`;
+       }
      } else if (pid === '8024dd7f-6df3-4eb7-9567-42c7198be3b7') {
        // CAPCUT PRO
        html += `

@@ -432,60 +432,76 @@
         function closeHistoryForm(){document.getElementById('history-form-container').style.display='none';}
 
         async function restartCycle() {
-            const cid = document.getElementById('modal-client-id').value; if (!cid) return;
-            let pids = [];
-            if (currentUserConfig.role === 'restricted') { 
-                const allowed = getAllowedProductId();
-                if(allowed) pids.push(allowed);
-            } else { 
-                for(let slot=1; slot<=4; slot++) {
-                    const selId = slot === 1 ? 'modal-product' : `modal-product-${slot}`;
-                    const el = document.getElementById(selId);
-                    if(el && el.value && el.parentElement && !el.parentElement.classList.contains('hidden')) pids.push(el.value);
+            try {
+                const cid = document.getElementById('modal-client-id').value; if (!cid) return;
+                let pids = [];
+                if (currentUserConfig.role === 'restricted') { 
+                    const allowed = getAllowedProductId();
+                    if(allowed) pids.push(allowed);
+                } else { 
+                    for(let slot=1; slot<=4; slot++) {
+                        const selId = slot === 1 ? 'modal-product' : `modal-product-${slot}`;
+                        const el = document.getElementById(selId);
+                        if(el && el.value && el.parentElement && !el.parentElement.classList.contains('hidden')) pids.push(el.value);
+                    }
                 }
+                if (pids.length === 0) return alert("Nenhum produto selecionado para reiniciar o ciclo.");
+                if (!confirm(`Reiniciar ciclo de ${pids.length} produto(s)? Isso fará as pendências considerarem o retorno como novo início.`)) return;
+                
+                const dt = new Date().toISOString().slice(0,10) + 'T12:00:00Z';
+                const refM = new Date().toISOString().slice(0,7);
+                
+                const inserts = pids.map(pid => ({ client_id: cid, product_id: pid, amount: 0, payment_date: dt, reference_month: refM, status: 'approved', method: 'restart' }));
+                const { error } = await sb.from('payment_history').insert(inserts);
+                if (error) throw error;
+                await fetchFullHistory(); renderHistoryList(cid); calculateDashboard(); alert("Ciclo reiniciado com sucesso.");
+            } catch (e) {
+                console.error('restartCycle error:', e);
+                alert(`Erro ao reiniciar ciclo: ${e.message || e}`);
             }
-            if (pids.length === 0) return alert("Nenhum produto selecionado para reiniciar o ciclo.");
-            if (!confirm(`Reiniciar ciclo de ${pids.length} produto(s)? Isso fará as pendências considerarem o retorno como novo início.`)) return;
-            
-            const dt = new Date().toISOString().slice(0,10) + 'T12:00:00Z';
-            const refM = new Date().toISOString().slice(0,7);
-            
-            const inserts = pids.map(pid => ({ client_id: cid, product_id: pid, amount: 0, payment_date: dt, reference_month: refM, status: 'approved', method: 'restart' }));
-            await sb.from('payment_history').insert(inserts);
-            await fetchFullHistory(); renderHistoryList(cid); calculateDashboard(); alert("Ciclo reiniciado com sucesso.");
         }
 
         async function saveHistory(){
-            const hid=document.getElementById('hist-id').value,
-                  cid=document.getElementById('modal-client-id').value,
-                  rawVal=document.getElementById('hist-amount').value,
-                  date=document.getElementById('hist-date').value,
-                  refMonth=document.getElementById('hist-ref-month').value,
-                  pid=document.getElementById('hist-product').value||null,
-                  amount=parseMoneyBR(rawVal);
-            
-            if(isNaN(amount) || !date || !refMonth) return alert("Preencha Data, Mês Referência e Valor");
-            
-            const payload={
-                client_id:cid,
-                amount:amount,
-                payment_date:date+'T12:00:00Z',
-                reference_month: refMonth,
-                status:'approved',
-                product_id:pid
-            };
-            
-            if(hid) {
-                await sb.from('payment_history').update(payload).eq('id',hid);
-            } else {
-                payload.method = 'manual';
-                await sb.from('payment_history').insert([payload]);
+            try {
+                const hid=document.getElementById('hist-id').value,
+                    cid=document.getElementById('modal-client-id').value,
+                    rawVal=document.getElementById('hist-amount').value,
+                    date=document.getElementById('hist-date').value,
+                    refMonth=document.getElementById('hist-ref-month').value,
+                    pid=document.getElementById('hist-product').value||null,
+                    amount=parseMoneyBR(rawVal);
+                
+                if(!cid) return alert("Cliente não identificado para lançar pagamento.");
+                if(isNaN(amount) || !date || !refMonth) return alert("Preencha Data, Mês Referência e Valor");
+                if(amount <= 0) return alert("Informe um valor maior que zero para o pagamento.");
+                if(!pid) return alert("Selecione o produto referente a este pagamento.");
+                
+                const payload={
+                    client_id:cid,
+                    amount:amount,
+                    payment_date:date+'T12:00:00Z',
+                    reference_month: refMonth,
+                    status:'approved',
+                    product_id:pid
+                };
+                
+                if(hid) {
+                    const { error } = await sb.from('payment_history').update(payload).eq('id',hid);
+                    if (error) throw error;
+                } else {
+                    payload.method = 'manual';
+                    const { error } = await sb.from('payment_history').insert([payload]);
+                    if (error) throw error;
+                }
+                
+                closeHistoryForm();
+                await fetchFullHistory();
+                renderHistoryList(cid);
+                calculateDashboard();
+            } catch (e) {
+                console.error('saveHistory error:', e);
+                alert(`Erro ao salvar pagamento: ${e.message || e}`);
             }
-            
-            closeHistoryForm();
-            await fetchFullHistory();
-            renderHistoryList(cid);
-            calculateDashboard();
         }
 
         function renderHistoryList(cid){

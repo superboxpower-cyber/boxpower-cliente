@@ -259,7 +259,8 @@
         
         async function fetchFullHistory() { 
             if(!sb) return; 
-            const { data } = await sb.from('payment_history').select('*'); 
+            const { data, error } = await sb.from('payment_history').select('*'); 
+            if (error) throw error;
             historyData = data || []; 
             buildPerformanceIndexes();
         }
@@ -490,19 +491,30 @@
                     product_id:pid
                 };
                 
+                let savedRow = null;
                 if(hid) {
-                    const { error } = await sb.from('payment_history').update(payload).eq('id',hid);
+                    const { data, error } = await sb.from('payment_history').update(payload).eq('id',hid).select().single();
                     if (error) throw error;
+                    savedRow = data || null;
                 } else {
                     payload.method = 'manual';
-                    const { error } = await sb.from('payment_history').insert([payload]);
+                    const { data, error } = await sb.from('payment_history').insert([payload]).select().single();
                     if (error) throw error;
+                    savedRow = data || null;
+                }
+
+                if (savedRow) {
+                    const idx = historyData.findIndex(x => x.id === savedRow.id);
+                    if (idx >= 0) historyData[idx] = savedRow;
+                    else historyData.unshift(savedRow);
+                    buildPerformanceIndexes();
                 }
                 
                 closeHistoryForm();
-                await fetchFullHistory();
                 renderHistoryList(cid);
                 calculateDashboard();
+                alert('Pagamento salvo com sucesso.');
+                fetchFullHistory().then(() => { renderHistoryList(cid); calculateDashboard(); }).catch(err => console.error('fetchFullHistory after saveHistory:', err));
             } catch (e) {
                 console.error('saveHistory error:', e);
                 alert(`Erro ao salvar pagamento: ${e.message || e}`);

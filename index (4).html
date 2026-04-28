@@ -423,8 +423,13 @@
                 const now = new Date().toISOString();
                 d.value=now.slice(0,10);
                 ref.value=now.slice(0,7);
-                a.value='';
-                p.value='';
+                if (activeClientProducts.length > 0) {
+                    p.value = activeClientProducts[0].id;
+                    historyProductChanged();
+                } else {
+                    a.value='';
+                    p.value='';
+                }
             }
         }
 

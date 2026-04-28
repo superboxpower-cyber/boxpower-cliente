@@ -243,6 +243,25 @@
 
         function addNextRow() { if(document.getElementById('row-prod-2').classList.contains('hidden')) document.getElementById('row-prod-2').classList.remove('hidden'); else if(document.getElementById('row-prod-3').classList.contains('hidden')) document.getElementById('row-prod-3').classList.remove('hidden'); else if(document.getElementById('row-prod-4').classList.contains('hidden')) { document.getElementById('row-prod-4').classList.remove('hidden'); document.getElementById('btn-add-row').classList.add('hidden'); } }
         function clearRow(n) { const s = n === 1 ? '' : '-' + n; document.getElementById(`modal-product${s}`).value = ''; document.getElementById(`modal-price${s}`).value = ''; document.getElementById(`modal-due${s}`).value = ''; if(n > 1) document.getElementById(`row-prod-${n}`).classList.add('hidden'); document.getElementById('btn-add-row').classList.remove('hidden'); }
+        function getSelectedModalProducts() {
+            const rows = [];
+            for (let slot = 1; slot <= 4; slot++) {
+                const rowEl = slot === 1 ? null : document.getElementById(`row-prod-${slot}`);
+                if (slot > 1 && rowEl && rowEl.classList.contains('hidden')) continue;
+                const selId = slot === 1 ? 'modal-product' : `modal-product-${slot}`;
+                const pid = document.getElementById(selId)?.value || '';
+                if (pid) rows.push({ slot, pid });
+            }
+            return rows;
+        }
+        function hasDuplicateSelectedProducts() {
+            const seen = new Map();
+            for (const row of getSelectedModalProducts()) {
+                if (seen.has(row.pid)) return { duplicate: true, firstSlot: seen.get(row.pid), secondSlot: row.slot, pid: row.pid };
+                seen.set(row.pid, row.slot);
+            }
+            return { duplicate: false };
+        }
         function removeRow(n) { clearRow(n); }
         function toggleHistorySection() { document.getElementById('history-section').classList.toggle('hidden'); }
         function showTab(id){ document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n=>{ n.classList.remove('text-blue-500'); n.classList.add('text-slate-500'); }); const target = document.getElementById(id); if(target) target.classList.add('active'); const btn = document.querySelector(`button[data-tab="${id}"]`); if(btn) { btn.classList.remove('text-slate-500'); btn.classList.add('text-blue-500'); } if(id === 'tab-expenses') renderExpensesList(); if(id === 'tab-home') calculateDashboard(); if(id === 'tab-clients') filterClients(); }
@@ -585,6 +604,10 @@
             try {
                 const id = document.getElementById('modal-client-id').value;
                 const name = document.getElementById('modal-name').value;
+                const duplicateCheck = hasDuplicateSelectedProducts();
+                if (duplicateCheck.duplicate) {
+                    return alert(`Produto duplicado entre os slots ${duplicateCheck.firstSlot} e ${duplicateCheck.secondSlot}. Cada produto deve aparecer apenas uma vez por cliente.`);
+                }
                 const email = document.getElementById('modal-email').value;
                 const wpp = document.getElementById('modal-whatsapp').value;
                 const active = document.getElementById('modal-status').value === 'true';
@@ -742,7 +765,7 @@
         function populateMonthFilter() { const el = document.getElementById('dashboard-filter-month'); const rep = document.getElementById('report-filter-month'); if(!el || !rep) return; if(el.options.length > 0) return; let h = ''; const year = new Date().getFullYear(); for(let i=0; i<12; i++) { const d = new Date(year, i, 1); const v = d.toISOString().slice(0,7); const l = d.toLocaleDateString('pt-BR', {month:'long', year:'numeric'}); const isCurrent = (new Date().getMonth() === i && new Date().getFullYear() === year) ? 'selected' : ''; h += `<option value="${v}" ${isCurrent}>${l}</option>`; } el.innerHTML = h; rep.innerHTML = h; if(!el.value) { el.selectedIndex = 0; rep.selectedIndex = 0; } }
         function toggleInactiveFilter() { showInactiveOnly = !showInactiveOnly; renderClients(allClients); }
         async function setMonthlyGoal() { const m = document.getElementById('dashboard-filter-month').value; const v = prompt("Nova meta para "+m, currentMonthGoal); if(v) { await sb.from('monthly_goals').upsert({month: m, target_amount: parseMoneyBR(v)}); calculateDashboard(); } }
-        function productChanged(slot) { const pidVal = slot === 1 ? document.getElementById('modal-product').value : document.getElementById(`modal-product-${slot}`).value; const priceEl = slot === 1 ? document.getElementById('modal-price') : document.getElementById(`modal-price-${slot}`); const p = allProducts.find(x=>x.id===pidVal); if(p) priceEl.value = p.price.toFixed(2).replace('.', ','); else priceEl.value = ''; }
+        function productChanged(slot) { const pidVal = slot === 1 ? document.getElementById('modal-product').value : document.getElementById(`modal-product-${slot}`).value; const priceEl = slot === 1 ? document.getElementById('modal-price') : document.getElementById(`modal-price-${slot}`); const p = allProducts.find(x=>x.id===pidVal); if(p) priceEl.value = p.price.toFixed(2).replace('.', ','); else priceEl.value = ''; const duplicateCheck = hasDuplicateSelectedProducts(); if (pidVal && duplicateCheck.duplicate && duplicateCheck.secondSlot === slot) { alert(`Este produto já está selecionado no slot ${duplicateCheck.firstSlot}. Escolha outro produto ou remova o duplicado.`); const selId = slot === 1 ? 'modal-product' : `modal-product-${slot}`; document.getElementById(selId).value = ''; priceEl.value = ''; } }
     </script>
 </body>
 </html>

@@ -530,7 +530,78 @@
         async function editClient(id) { updateProductUI(); const c = allClients.find(x => x.id === id); if(!c) return; document.getElementById('modal-client-id').value = c.id; document.getElementById('modal-name').value = c.name; document.getElementById('modal-email').value = c.email || ''; const wppInput = document.getElementById('modal-whatsapp'); wppInput.value = c.whatsapp || ''; maskPhone(wppInput); document.getElementById('modal-status').value = c.active; document.getElementById('modal-product').disabled = false; document.getElementById('btn-add-row').style.display = ''; const fill=(n,d,p,pr)=>{ document.getElementById(`modal-due${n>1?'-'+n:''}`).value=d||''; document.getElementById(`modal-product${n>1?'-'+n:''}`).value=p||''; document.getElementById(`modal-price${n>1?'-'+n:''}`).value=pr?pr.toFixed(2).replace('.',','):''; if(n>1 && (d||p||pr)) document.getElementById(`row-prod-${n}`).classList.remove('hidden'); else if(n>1) document.getElementById(`row-prod-${n}`).classList.add('hidden'); }; fill(1,c.due_day,c.product_id,c.agreed_price); fill(2,c.due_day_2,c.product_id_2,c.agreed_price_2); fill(3,c.due_day_3,c.product_id_3,c.agreed_price_3); fill(4,c.due_day_4,c.product_id_4,c.agreed_price_4); if(currentUserConfig.role==='restricted'){document.getElementById('modal-product').disabled=true;document.getElementById('btn-add-row').style.display='none';} document.getElementById('history-section').classList.add('hidden'); renderHistoryList(id); document.getElementById('client-modal').classList.remove('hidden'); }
         
         // MUDANÇA AQUI: Salvar o email no banco
-        async function saveClient() { const id = document.getElementById('modal-client-id').value; const name = document.getElementById('modal-name').value; const email = document.getElementById('modal-email').value; const wpp = document.getElementById('modal-whatsapp').value; const active = document.getElementById('modal-status').value === 'true'; let p1, p2, p3, p4; if (currentUserConfig.role === 'restricted') { const allowedPid = getAllowedProductId(); const prod = allProducts.find(p => p.id === allowedPid); const due = parseInt(document.getElementById('modal-due').value)||10; p1 = { pid: allowedPid, price: prod ? prod.price : 0, due: due }; p2 = { pid: null, price: null, due: null }; p3 = { pid: null, price: null, due: null }; p4 = { pid: null, price: null, due: null }; } else { const getP = (n) => { if(n > 1 && document.getElementById(`row-prod-${n}`).classList.contains('hidden')) return {d:null,p:null,pr:null}; const d=parseInt(document.getElementById(`modal-due${n>1?'-'+n:''}`).value)||null; const pid = document.getElementById(n===1 ? 'modal-product' : `modal-product-${n}`).value || null; const price = parseMoneyBR(document.getElementById(n===1 ? 'modal-price' : `modal-price-${n}`).value); return { d:d, pid:pid, price:price }; }; p1 = getP(1); p2 = getP(2); p3 = getP(3); p4 = getP(4); } const d = { name, email, whatsapp: wpp, active, due_day: p1.d, product_id: p1.pid, agreed_price: p1.price, due_day_2: p2.d, product_id_2: p2.pid, agreed_price_2: p2.price, due_day_3: p3.d, product_id_3: p3.pid, agreed_price_3: p3.price, due_day_4: p4.d, product_id_4: p4.pid, agreed_price_4: p4.price }; if(id) await sb.from('clients').update(d).eq('id', id); else { const {data} = await sb.from('clients').insert([d]).select(); if(data && data[0]){ const newId = data[0].id; const dt = new Date().toISOString().slice(0,10) + 'T12:00:00Z'; const refM = new Date().toISOString().slice(0,7); const pays = []; if(p1.pid && p1.price) pays.push({client_id:newId, product_id:p1.pid, amount:p1.price, payment_date:dt, reference_month:refM, status:'approved', method:'auto_reg'}); if(p2.pid && p2.price) pays.push({client_id:newId, product_id:p2.pid, amount:p2.price, payment_date:dt, reference_month:refM, status:'approved', method:'auto_reg'}); if(p3.pid && p3.price) pays.push({client_id:newId, product_id:p3.pid, amount:p3.price, payment_date:dt, reference_month:refM, status:'approved', method:'auto_reg'}); if(p4.pid && p4.price) pays.push({client_id:newId, product_id:p4.pid, amount:p4.price, payment_date:dt, reference_month:refM, status:'approved', method:'auto_reg'}); if(pays.length>0) await sb.from('payment_history').insert(pays); } } closeModal(); loadAllData(); }
+        async function saveClient() {
+            try {
+                const id = document.getElementById('modal-client-id').value;
+                const name = document.getElementById('modal-name').value;
+                const email = document.getElementById('modal-email').value;
+                const wpp = document.getElementById('modal-whatsapp').value;
+                const active = document.getElementById('modal-status').value === 'true';
+                let p1, p2, p3, p4;
+                if (currentUserConfig.role === 'restricted') {
+                    const allowedPid = getAllowedProductId();
+                    const prod = allProducts.find(p => p.id === allowedPid);
+                    const due = parseInt(document.getElementById('modal-due').value) || 10;
+                    p1 = { pid: allowedPid, price: prod ? prod.price : 0, d: due };
+                    p2 = { pid: null, price: null, d: null };
+                    p3 = { pid: null, price: null, d: null };
+                    p4 = { pid: null, price: null, d: null };
+                } else {
+                    const getP = (n) => {
+                        if (n > 1 && document.getElementById(`row-prod-${n}`).classList.contains('hidden')) return { d: null, pid: null, price: null };
+                        const d = parseInt(document.getElementById(`modal-due${n > 1 ? '-' + n : ''}`).value) || null;
+                        const pid = document.getElementById(n === 1 ? 'modal-product' : `modal-product-${n}`).value || null;
+                        const price = parseMoneyBR(document.getElementById(n === 1 ? 'modal-price' : `modal-price-${n}`).value);
+                        return { d, pid, price: Number.isFinite(price) ? price : null };
+                    };
+                    p1 = getP(1); p2 = getP(2); p3 = getP(3); p4 = getP(4);
+                }
+                const d = {
+                    name,
+                    email,
+                    whatsapp: wpp,
+                    active,
+                    due_day: p1.d,
+                    product_id: p1.pid,
+                    agreed_price: p1.price,
+                    due_day_2: p2.d,
+                    product_id_2: p2.pid,
+                    agreed_price_2: p2.price,
+                    due_day_3: p3.d,
+                    product_id_3: p3.pid,
+                    agreed_price_3: p3.price,
+                    due_day_4: p4.d,
+                    product_id_4: p4.pid,
+                    agreed_price_4: p4.price
+                };
+                if (id) {
+                    const { error } = await sb.from('clients').update(d).eq('id', id);
+                    if (error) throw error;
+                } else {
+                    const { data, error } = await sb.from('clients').insert([d]).select();
+                    if (error) throw error;
+                    if (data && data[0]) {
+                        const newId = data[0].id;
+                        const dt = new Date().toISOString().slice(0,10) + 'T12:00:00Z';
+                        const refM = new Date().toISOString().slice(0,7);
+                        const pays = [];
+                        if (p1.pid && p1.price) pays.push({client_id:newId, product_id:p1.pid, amount:p1.price, payment_date:dt, reference_month:refM, status:'approved', method:'auto_reg'});
+                        if (p2.pid && p2.price) pays.push({client_id:newId, product_id:p2.pid, amount:p2.price, payment_date:dt, reference_month:refM, status:'approved', method:'auto_reg'});
+                        if (p3.pid && p3.price) pays.push({client_id:newId, product_id:p3.pid, amount:p3.price, payment_date:dt, reference_month:refM, status:'approved', method:'auto_reg'});
+                        if (p4.pid && p4.price) pays.push({client_id:newId, product_id:p4.pid, amount:p4.price, payment_date:dt, reference_month:refM, status:'approved', method:'auto_reg'});
+                        if (pays.length > 0) {
+                            const { error: payErr } = await sb.from('payment_history').insert(pays);
+                            if (payErr) throw payErr;
+                        }
+                    }
+                }
+                closeModal();
+                loadAllData();
+            } catch (e) {
+                console.error('saveClient error:', e);
+                alert(`Erro ao salvar cliente: ${e.message || e}`);
+            }
+        }
         async function deleteClient(id, name) { if(confirm(`Excluir ${name}?`)) { await sb.from('payment_history').delete().eq('client_id', id); await sb.from('payments').delete().eq('client_id', id); await sb.from('portal_users').delete().eq('client_id', id); await sb.from('credential_reset_members').delete().eq('client_id', id); await sb.from('veo3_subscriptions').delete().eq('client_id', id); await sb.from('client_risk_events').delete().eq('client_id', id); await sb.from('clients').delete().eq('id', id); loadAllData(); } }
         
         let debounceTimer;

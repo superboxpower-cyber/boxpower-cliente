@@ -497,10 +497,28 @@
                     if (error) throw error;
                     savedRow = data || null;
                 } else {
-                    payload.method = 'manual';
-                    const { data, error } = await sb.from('payment_history').insert([payload]).select().single();
-                    if (error) throw error;
-                    savedRow = data || null;
+                    const duplicate = historyData.find(x =>
+                        x.client_id === cid &&
+                        (x.product_id || null) === (pid || null) &&
+                        (x.reference_month || '') === refMonth
+                    );
+
+                    if (duplicate) {
+                        if (!confirm(`Já existe um pagamento deste cliente para este produto em ${refMonth}. Deseja atualizar o lançamento existente?`)) {
+                            return;
+                        }
+                        const { data, error } = await sb.from('payment_history').update({
+                            ...payload,
+                            method: duplicate.method || 'manual'
+                        }).eq('id', duplicate.id).select().single();
+                        if (error) throw error;
+                        savedRow = data || null;
+                    } else {
+                        payload.method = 'manual';
+                        const { data, error } = await sb.from('payment_history').insert([payload]).select().single();
+                        if (error) throw error;
+                        savedRow = data || null;
+                    }
                 }
 
                 if (savedRow) {
